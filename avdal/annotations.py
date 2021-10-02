@@ -8,12 +8,14 @@ def enforce_types(f: t.Callable) -> t.Callable:
         checks = {}
         sig = inspect.signature(f)
         i = 0
+        argc = len(args)
         for k, v in sig.parameters.items():
             if k in kwargs:
                 checks[k] = (v.annotation, kwargs[k])
-            else:
+            elif argc > 0:
                 checks[k] = (v.annotation, args[i])
                 i += 1
+                argc -= 1
 
         for arg, (annotation, value) in checks.items():
             if annotation == Parameter.empty:
