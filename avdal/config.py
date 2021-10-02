@@ -1,15 +1,14 @@
 import os
 import re
+from avdal import annotations
 
 _envre = re.compile(r'''^(?:export\s*)?([_a-zA-Z][\w_]*)\s*=\s*(.*)$''')
 _varre = re.compile(r'''\$([\w_]+)''')
 _include_re = re.compile(r'''^#include\s+(.*)\s*$''')
 
 
+@annotations.enforce_types
 def load_env(env_file: str, includes: bool = True):
-    assert type(env_file) is str
-    assert type(includes) is bool
-
     if not os.path.isfile(env_file):
         return
 
@@ -37,11 +36,8 @@ class Config:
 
         self.prefix = prefix
 
+    @annotations.enforce_types
     def __call__(self, name: str, default: any = None, cast: type = str, prefixed: bool = True):
-        assert type(name) is str
-        assert type(cast) is type
-        assert type(prefixed) is bool
-
         if prefixed and self.prefix:
             name = f"{self.prefix}_{name}"
 
