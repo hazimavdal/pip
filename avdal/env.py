@@ -9,6 +9,14 @@ _include_re = re.compile(r'''^#include\s+(.*)\s*$''')
 
 @annotations.enforce_types
 def load_env(env_file: str, includes: bool = True):
+    envs = getattr(os.environ, "__env_files", set())
+
+    if env_file in envs:
+        return
+
+    envs.add(os.path.abspath(env_file))
+    os.environ.__env_files = envs
+
     if not os.path.isfile(env_file):
         return
 
