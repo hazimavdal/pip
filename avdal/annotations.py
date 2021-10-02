@@ -3,7 +3,7 @@ import typing as t
 from inspect import Parameter
 
 
-def enforce_type_annotations():
+def enforce_types():
     def decorator(f: t.Callable) -> t.Callable:
         def wrapper(*args, **kwargs):
             checks = {}

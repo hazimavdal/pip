@@ -1,6 +1,5 @@
 import unittest
-import avdal
-from avdal.typing import enforce_type_annotations
+from avdal import annotations
 
 
 def fails(f, *args, **kwargs):
@@ -14,14 +13,14 @@ def fails(f, *args, **kwargs):
 class TestTyping(unittest.TestCase):
     def test_enforce_static_annotations(self):
 
-        @enforce_type_annotations()
+        @annotations.enforce_types()
         def f1(a: str, b: int):
             pass
 
         self.assertFalse(fails(f1, "a", 1))
         self.assertTrue(fails(f1, "a", "1"))
 
-        @enforce_type_annotations()
+        @annotations.enforce_types()
         def f2(a: str, b: int, c: str = "", d=1):
             pass
 
