@@ -13,14 +13,14 @@ def fails(f, *args, **kwargs):
 class TestTyping(unittest.TestCase):
     def test_enforce_static_annotations(self):
 
-        @annotations.enforce_types()
+        @annotations.enforce_types
         def f1(a: str, b: int):
             pass
 
         self.assertFalse(fails(f1, "a", 1))
         self.assertTrue(fails(f1, "a", "1"))
 
-        @annotations.enforce_types()
+        @annotations.enforce_types
         def f2(a: str, b: int, c: str = "", d=1):
             pass
 
