@@ -1,6 +1,6 @@
 import os
 import re
-import .annotations
+from . import annotations
 
 _envre = re.compile(r'''^(?:export\s*)?([_a-zA-Z][\w_]*)\s*=\s*(.*)$''')
 _varre = re.compile(r'''\$([\w_]+)''')
