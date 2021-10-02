@@ -21,7 +21,7 @@ def enforce_types(f: t.Callable) -> t.Callable:
             if annotation == Parameter.empty:
                 continue
 
-            if annotation != type(value):
+            if annotation is not any and annotation != type(value):
                 fn = f.__name__
                 e = annotation.__name__
                 a = type(value).__name__
