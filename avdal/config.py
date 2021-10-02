@@ -30,7 +30,7 @@ def load_env(env_file: str, includes: bool = True):
                 os.environ[key] = value
 
 
-class Config:
+class Env:
     def __init__(self, prefix=None):
         load_env(".env")
 
