@@ -27,3 +27,13 @@ class TestTyping(unittest.TestCase):
         self.assertFalse(fails(f2, "a", 1, "", 1))
         self.assertFalse(fails(f2, "a", 1, "", ""))
         self.assertTrue(fails(f2, "a", 1, 1, ""))
+
+        @annotations.enforce_types
+        def f3(a=1, b=2, c: str = ""):
+            pass
+
+        self.assertFalse(fails(f3, a=2))
+        self.assertFalse(fails(f3, 0, b=2))
+        self.assertFalse(fails(f3, c="1", a=2))
+        self.assertFalse(fails(f3, 1, 2))
+        self.assertTrue(fails(f3, 1, 2, 1))
