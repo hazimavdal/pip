@@ -40,8 +40,6 @@ def load_env(env_file: str, includes: bool = True):
 
 class Env:
     def __init__(self, prefix=None):
-        load_env(".env")
-
         self.prefix = prefix
 
     @annotations.enforce_types
