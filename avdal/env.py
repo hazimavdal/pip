@@ -7,14 +7,14 @@ _varre = re.compile(r'''\$([\w_]+)''')
 _include_re = re.compile(r'''^#include\s+(.*)\s*$''')
 
 
-@annotations.enforce_types
-def load_env(env_file: str, includes: bool = True):
+def load_env(env_file: str):
+    env_file = os.path.abspath(env_file)
     envs = getattr(os.environ, "__env_files", set())
 
     if env_file in envs:
         return
 
-    envs.add(os.path.abspath(env_file))
+    envs.add(env_file)
     os.environ.__env_files = envs
 
     if not os.path.isfile(env_file):
@@ -22,11 +22,10 @@ def load_env(env_file: str, includes: bool = True):
 
     with open(env_file, "r") as f:
         for line in f.readlines():
-            if includes:
-                match = _include_re.match(line)
-                if match is not None:
-                    file = match.group(1).strip()
-                    load_env(file, includes=False)
+            match = _include_re.match(line)
+            if match is not None:
+                file = match.group(1).strip()
+                load_env(file)
 
             match = _envre.match(line)
             if match is not None:
