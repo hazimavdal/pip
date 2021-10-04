@@ -3,8 +3,10 @@ import typing as t
 from inspect import Parameter
 
 
-def enforce_types(f: t.Callable) -> t.Callable:
+def argmap(f):
     def wrapper(*args, **kwargs):
+        sig = inspect.signature(f)
+
         checks = {}
         sig = inspect.signature(f)
         i = 0
@@ -16,6 +18,17 @@ def enforce_types(f: t.Callable) -> t.Callable:
                 checks[k] = (v.annotation, args[i])
                 i += 1
                 argc -= 1
+            elif v.default is not None:
+                checks[k] = (v.annotation, v.default)
+
+        return checks
+
+    return wrapper
+
+
+def enforce_types(f: t.Callable) -> t.Callable:
+    def wrapper(*args, **kwargs):
+        checks = argmap(f)(*args, **kwargs)
 
         for arg, (annotation, value) in checks.items():
             if annotation == Parameter.empty:
@@ -27,6 +40,28 @@ def enforce_types(f: t.Callable) -> t.Callable:
                 a = type(value).__name__
 
                 raise ValueError(f"{fn}: param {arg} expects a value of type {e}, got {a}")
+
+        return f(*args, **kwargs)
+
+    wrapper.__name__ = f.__name__
+    return wrapper
+
+
+def auto_attrs(f: t.Callable) -> t.Callable:
+    def wrapper(*args, **kwargs):
+        if f.__name__ != "__init__":
+            return
+
+        map = argmap(f)(*args, **kwargs)
+
+        if not "self" in map:
+            return
+
+        _, self = map["self"]
+        del map["self"]
+
+        for arg, (_, value) in map.items():
+            setattr(self, arg, value)
 
         return f(*args, **kwargs)
 
