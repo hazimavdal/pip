@@ -38,7 +38,7 @@ def load_env(env_file: str):
 
 
 def load_appname(default=None):
-    return os.environ.get("APP_NAME", default)
+    return os.environ.get("APP_NAME", default or "UNNAMED_FLASK_APP").upper()
 
 
 class Env:
