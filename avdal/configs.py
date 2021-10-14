@@ -7,6 +7,7 @@ from .auth.keycloak import Keycloak
 def load_configs(role):
     env = Env()
 
+    configs_protocol = env("CONFIGS_PROTOCOL", default="https")
     configs_host = env("CONFIGS_HOST", default="configs.avd.al")
     configs_client = env("CONFIGS_CLIENT_ID", default="")
     configs_secret = env("CONFIGS_CLIENT_SECRET", default="")
@@ -26,7 +27,7 @@ def load_configs(role):
         return
 
     def load_role(role):
-        res = req.get(f"https://{configs_host}/api/v1/roles/{role}/configs", headers={
+        res = req.get(f"{configs_protocol}://{configs_host}/api/v1/roles/{role}/configs", headers={
             "Authorization": f"Bearer {token}",
         })
 
