@@ -1,4 +1,5 @@
 import os
+import socket
 import requests as req
 from .env import Env
 from .auth.keycloak import Keycloak
@@ -27,6 +28,8 @@ def load_configs(role):
         return
 
     def load_role(role):
+        print(f"loading role: {role}")
+
         res = req.get(f"{configs_protocol}://{configs_host}/api/v1/roles/{role}/configs", headers={
             "Authorization": f"Bearer {token}",
         })
@@ -39,3 +42,4 @@ def load_configs(role):
 
     load_role(role)
     load_role("common")
+    load_role(socket.gethostname().lower())
