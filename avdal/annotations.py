@@ -18,7 +18,7 @@ def argmap(f):
                 checks[k] = (v.annotation, args[i])
                 i += 1
                 argc -= 1
-            elif v.default is not None:
+            else:
                 checks[k] = (v.annotation, v.default)
 
         return checks
