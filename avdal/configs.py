@@ -39,6 +39,8 @@ def load_configs(role):
 
         for k, v in res.json().items():
             os.environ[k] = str(v)
+        
+        print(f"loaded role: {role}")
 
     load_role(role)
     load_role("common")
