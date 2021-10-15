@@ -5,7 +5,7 @@ class PermSet:
 
     def __normalize(self, rn: str, actions: set):
         assert type(rn) is str
-        assert type(actions) is set
+        assert type(actions) in [set, list]
 
         rn = [p.strip().lower() for p in rn.split(":")]
         actions = {a.strip().lower() for a in actions}
