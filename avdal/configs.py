@@ -5,9 +5,10 @@ from .env import Env
 from .auth.keycloak import Keycloak
 
 
-def load_configs(role):
+def load_configs(app_role):
     env = Env()
 
+    app_role = env("CONFIGS_ROLE_NAME", default=app_role)
     configs_protocol = env("CONFIGS_PROTOCOL", default="https")
     configs_host = env("CONFIGS_HOST", default="configs.avd.al")
     configs_client = env("CONFIGS_CLIENT_ID", default="")
@@ -43,6 +44,6 @@ def load_configs(role):
         
         print(f"loaded role: {role}")
 
-    load_role(role)
+    load_role(app_role)
     load_role("common")
     load_role(socket.gethostname().lower())
