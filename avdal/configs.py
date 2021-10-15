@@ -38,7 +38,8 @@ def load_configs(role):
             return
 
         for k, v in res.json().items():
-            os.environ[k] = str(v)
+            if k not in os.environ:
+                os.environ[k] = str(v)
         
         print(f"loaded role: {role}")
 
