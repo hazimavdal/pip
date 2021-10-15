@@ -27,7 +27,14 @@ class PermSet:
         # e.g. rn:a:* >>= rn:a:b:c
         return rn[-1] == "*" and rn[:-1] == self.rn[:len(rn)-1]
 
-    def check(self, rn: str, actions: set):
+    @property
+    def scope(self) -> str:
+        if not getattr(self, "_scope", None):
+            self._scope = ":".join(self.rn + [self.action])
+
+        return self._scope
+
+    def check(self, rn: str, actions: set) -> bool:
         rn, actions = self.__normalize(rn, actions)
 
         return self.__cmp_actions(actions) and self.__cmp_rn(rn)
