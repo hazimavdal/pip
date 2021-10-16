@@ -37,7 +37,7 @@ def load_configs(app_role):
         })
 
         if not res.ok:
-            print("configs service returned an error")
+            print(f"configs service returned an error: [{res.content}]")
             return
 
         for k, v in res.json().items():
