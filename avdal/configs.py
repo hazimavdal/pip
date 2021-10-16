@@ -3,6 +3,7 @@ import socket
 import requests as req
 from .env import Env
 from .auth.keycloak import Keycloak
+from requests.exceptions import ConnectionError
 
 
 def load_configs(app_role):
@@ -30,18 +31,24 @@ def load_configs(app_role):
 
     def load_role(role):
         print(f"loading role: {role}")
+        role_uri = f"{configs_protocol}://{configs_host}/api/v1/roles/{role}/configs"
 
-        res = req.get(f"{configs_protocol}://{configs_host}/api/v1/roles/{role}/configs", headers={
-            "Authorization": f"Bearer {token}",
-        })
+        try:
+            res = req.get(role_uri, headers={
+                "Authorization": f"Bearer {token}",
+            })
+        except ConnectionError:
+            print(f"cannot connect to configs service at [{role_uri}]")
+            return
 
         if not res.ok:
+            print("configs service returned an error")
             return
 
         for k, v in res.json().items():
             if k not in os.environ:
                 os.environ[k] = str(v)
-        
+
         print(f"loaded role: {role}")
 
     load_role(app_role)
