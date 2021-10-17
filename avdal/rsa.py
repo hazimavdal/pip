@@ -97,6 +97,22 @@ class Store:
 
         return kid
 
+    def well_known(self):
+        def pem(key):
+            decoded = key.public_bytes(
+                encoding=serialization.Encoding.PEM,
+                format=serialization.PublicFormat.SubjectPublicKeyInfo
+            ).decode()
+
+            return '\n'.join(decoded.splitlines()[1:-1])
+
+        keys = [{"kid": k, "public_key": pem(v)}
+                for k, v in self.public_keys.items()]
+
+        return {
+            "keys": keys
+        }
+
 
 class Signer:
     def __init__(self, store: Store):
