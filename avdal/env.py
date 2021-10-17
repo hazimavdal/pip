@@ -46,7 +46,7 @@ class Env:
         value = os.environ.get(f"{self.prefix}{var}") or os.environ.get(var) or default
 
         if value is None:
-            raise Exception(f"{var} not found. Declare it as environment variable or provide a default value.")
+            raise Exception(f"{var} [prefix={self.prefix}] not found. Declare it as environment variable or provide a default value.")
 
         if cast is not str:
             try:
