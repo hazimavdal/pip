@@ -94,7 +94,7 @@ class Store:
 
 
 class Signer:
-    def __init__(self, store):
+    def __init__(self, store: Store):
         self.store = store
 
         if len(self.store.kids) == 0:
