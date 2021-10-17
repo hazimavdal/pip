@@ -1,4 +1,5 @@
 import os
+import stat
 import secrets
 from glob import glob
 from cryptography.hazmat.primitives import hashes
@@ -16,7 +17,7 @@ class Store:
     KID_SIZE = 16
     KEY_SIZE = 2048
     PUBLIC_EXPONENT = 65537
-    KEY_FILE_MODE = 3389
+    KEY_FILE_MODE = stat.S_IRUSR | stat.S_IRGRP
 
     def __init__(self, keys_root):
         self.keys_root = os.path.expanduser(keys_root)
