@@ -1,15 +1,20 @@
 import os
 import stat
 import secrets
+import cryptography
 from glob import glob
 from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.asymmetric import padding
-from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKeyWithSerialization
 
 
 class InvalidKeyID(Exception):
+    pass
+
+
+class InvalidSignature(Exception):
     pass
 
 
@@ -119,19 +124,40 @@ class Signer:
         }
 
     def verify(self, data: bytes, sig: dict):
-        kid, signature = sig["kid"], bytes.fromhex(sig["sig"])
+        if "kid" not in sig:
+            raise InvalidSignature("kid: key not found")
+
+        if "sig" not in sig:
+            raise InvalidSignature("sig: key not found")
+
+        kid, signature = sig["kid"], sig["sig"]
+
+        if type(kid) is not str:
+            raise InvalidSignature(f"kid: should be of type str, got {type(kid).__name__}")
+
+        if type(signature) is not str:
+            raise InvalidSignature(f"sig: should be of type str, got {type(signature).__name__}")
+
+        try:
+            signature = bytes.fromhex(signature)
+        except ValueError as e:
+            raise InvalidSignature(e)
 
         public_key = self.store.public_keys.get(kid)
 
         if not public_key:
             raise InvalidKeyID(kid)
 
-        public_key.verify(
-            signature,
-            data,
-            padding.PSS(
-                mgf=padding.MGF1(hashes.SHA256()),
-                salt_length=padding.PSS.MAX_LENGTH
-            ),
-            hashes.SHA256()
-        )
+        try:
+            public_key.verify(
+                signature,
+                data,
+                padding.PSS(
+                    mgf=padding.MGF1(hashes.SHA256()),
+                    salt_length=padding.PSS.MAX_LENGTH
+                ),
+                hashes.SHA256()
+            )
+
+        except cryptography.exceptions.InvalidSignature as e:
+            raise InvalidSignature()
