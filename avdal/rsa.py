@@ -24,7 +24,7 @@ class Store:
     PUBLIC_EXPONENT = 65537
     KEY_FILE_MODE = stat.S_IRUSR | stat.S_IRGRP
 
-    def __init__(self, keys_root):
+    def __init__(self, keys_root: str, storage_key: bytes = None):
         self.keys_root = os.path.expanduser(keys_root)
         self.priv_root = os.path.join(self.keys_root, "priv")
 
@@ -35,7 +35,7 @@ class Store:
         self.private_keys = {}
         self.public_keys = {}
 
-        self.storage_password = b"\0"
+        self.storage_key = storage_key
 
         self._load_keys()
 
@@ -57,7 +57,7 @@ class Store:
         with open(filename, "rb") as f:
             private_key = serialization.load_pem_private_key(
                 f.read(),
-                password=self.storage_password,
+                password=self.storage_key,
             )
 
             return private_key
@@ -75,10 +75,15 @@ class Store:
         os.chmod(filename, Store.KEY_FILE_MODE)
 
     def _save_key(self, kid, private_key: RSAPrivateKeyWithSerialization):
+        if not self.storage_key:
+            enc_alg = serialization.NoEncryption()
+        else:
+            enc_alg = serialization.BestAvailableEncryption(self.storage_key)
+
         pem = private_key.private_bytes(
             encoding=serialization.Encoding.PEM,
             format=serialization.PrivateFormat.PKCS8,
-            encryption_algorithm=serialization.BestAvailableEncryption(self.storage_password)
+            encryption_algorithm=enc_alg
         )
 
         self._save_file(self._key_filename(kid), pem)
