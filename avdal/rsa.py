@@ -160,4 +160,4 @@ class Signer:
             )
 
         except cryptography.exceptions.InvalidSignature as e:
-            raise InvalidSignature()
+            raise InvalidSignature("invalid signature")
