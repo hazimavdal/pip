@@ -43,7 +43,7 @@ class Env:
 
     @annotations.enforce_types
     def __call__(self, var: str, default: any = None, cast: type = str):
-        value = os.environ.get(var) or os.environ.get(f"{self.prefix}{var}") or default
+        value = os.environ.get(f"{self.prefix}{var}") or os.environ.get(var) or default
 
         if value is None:
             raise Exception(f"{var} not found. Declare it as environment variable or provide a default value.")
