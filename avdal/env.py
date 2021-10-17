@@ -39,17 +39,14 @@ def load_env(env_file: str):
 
 class Env:
     def __init__(self, prefix=None):
-        self.prefix = prefix
+        self.prefix = prefix + "_" if prefix else ""
 
     @annotations.enforce_types
-    def __call__(self, name: str, default: any = None, cast: type = str, prefixed: bool = True):
-        if prefixed and self.prefix:
-            name = f"{self.prefix}_{name}"
-
-        value = os.environ.get(name, default=default)
+    def __call__(self, var: str, default: any = None, cast: type = str):
+        value = os.environ.get(var) or os.environ.get(f"{self.prefix}{var}") or default
 
         if value is None:
-            raise Exception(f"{name} not found. Declare it as environment variable or provide a default value.")
+            raise Exception(f"{var} not found. Declare it as environment variable or provide a default value.")
 
         if cast is not str:
             try:
