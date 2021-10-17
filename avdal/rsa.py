@@ -1,0 +1,136 @@
+import os
+import secrets
+from glob import glob
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKeyWithSerialization
+
+
+class InvalidKeyID(Exception):
+    pass
+
+
+class Store:
+    KID_SIZE = 16
+    KEY_SIZE = 2048
+    PUBLIC_EXPONENT = 65537
+    KEY_FILE_MODE = 3389
+
+    def __init__(self, keys_root):
+        self.keys_root = os.path.expanduser(keys_root)
+        self.priv_root = os.path.join(self.keys_root, "priv")
+
+        if not os.path.isdir(self.priv_root):
+            os.makedirs(self.priv_root)
+
+        self.kids = set()
+        self.private_keys = {}
+        self.public_keys = {}
+
+        self.storage_password = b"\0"
+
+        self._load_keys()
+
+    def _add_key(self, kid, priv_key):
+        self.kids.add(kid)
+        self.private_keys[kid] = priv_key
+        self.public_keys[kid] = priv_key.public_key()
+
+    def _load_keys(self):
+        pattern = os.path.join(self.priv_root, "*.pem")
+        for filename in glob(pattern):
+            _, file = os.path.split(filename)
+            kid, _ = os.path.splitext(file)
+
+            priv_key = self._load_key(filename)
+            self._add_key(kid, priv_key)
+
+    def _load_key(self, filename) -> RSAPrivateKeyWithSerialization:
+        with open(filename, "rb") as f:
+            private_key = serialization.load_pem_private_key(
+                f.read(),
+                password=self.storage_password,
+            )
+
+            return private_key
+
+    def _key_filename(self, kid: str) -> str:
+        return os.path.join(self.priv_root, f"{kid}.pem")
+
+    def _save_file(self, filename: str, content: bytes):
+        if os.path.exists(filename):
+            raise FileExistsError(filename)
+
+        with open(filename, "wb") as f:
+            f.write(content)
+
+        os.chmod(filename, Store.KEY_FILE_MODE)
+
+    def _save_key(self, kid, private_key: RSAPrivateKeyWithSerialization):
+        pem = private_key.private_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.PKCS8,
+            encryption_algorithm=serialization.BestAvailableEncryption(self.storage_password)
+        )
+
+        self._save_file(self._key_filename(kid), pem)
+
+    def generate_key(self) -> str:
+        private_key = rsa.generate_private_key(
+            public_exponent=Store.PUBLIC_EXPONENT,
+            key_size=Store.KEY_SIZE,
+        )
+
+        kid = secrets.token_bytes(Store.KID_SIZE).hex()
+        assert kid not in self.private_keys
+
+        self._save_key(kid, private_key)
+        self._add_key(kid, private_key)
+
+        return kid
+
+
+class Signer:
+    def __init__(self, store):
+        self.store = store
+
+        if len(self.store.kids) == 0:
+            self.store.generate_key()
+
+        self.kid = next(iter(self.store.kids))
+        self.private_key = self.store.private_keys[self.kid]
+
+    def sign(self, data: bytes):
+        sig = self.private_key.sign(
+            data,
+            padding.PSS(
+                mgf=padding.MGF1(hashes.SHA256()),
+                salt_length=padding.PSS.MAX_LENGTH
+            ),
+            hashes.SHA256()
+        )
+
+        return {
+            "sig": sig.hex(),
+            "kid": self.kid
+        }
+
+    def verify(self, data: bytes, sig: dict):
+        kid, signature = sig["kid"], bytes.fromhex(sig["sig"])
+
+        public_key = self.store.public_keys.get(kid)
+
+        if not public_key:
+            raise InvalidKeyID(kid)
+
+        public_key.verify(
+            signature,
+            data,
+            padding.PSS(
+                mgf=padding.MGF1(hashes.SHA256()),
+                salt_length=padding.PSS.MAX_LENGTH
+            ),
+            hashes.SHA256()
+        )
