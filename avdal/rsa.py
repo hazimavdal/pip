@@ -139,14 +139,9 @@ class Signer:
     def __init__(self, store: Store):
         self.store = store
 
-        if len(self.store.kids) == 0:
-            self.store.generate_key()
-
-        self.kid = next(iter(self.store.kids))
-        self.private_key = self.store.private_keys[self.kid]
-
-    def sign(self, data: bytes):
-        sig = self.private_key.sign(
+    def sign(self, kid: str, data: bytes) -> bytes:
+        private_key = self.store.get_private_key(kid)
+        sig = private_key.sign(
             data,
             padding.PSS(
                 mgf=padding.MGF1(hashes.SHA256()),
@@ -155,21 +150,10 @@ class Signer:
             hashes.SHA256()
         )
 
-        return {
-            "sig": sig.hex(),
-            "kid": self.kid
-        }
+        return sig
 
-    def verify(self, kid: str, signature: str, data: bytes):
-        try:
-            signature = bytes.fromhex(signature)
-        except ValueError as e:
-            raise InvalidSignature(e)
-
-        public_key = self.store.public_keys.get(kid)
-
-        if not public_key:
-            raise InvalidKeyID(kid)
+    def verify(self, kid: str, signature: bytes, data: bytes):
+        public_key = self.store.get_public_key(kid)
 
         try:
             public_key.verify(
