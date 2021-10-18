@@ -35,18 +35,18 @@ class Store:
         if not os.path.isdir(self.priv_root):
             os.makedirs(self.priv_root)
 
-        self.kids = set()
-        self.private_keys = {}
-        self.public_keys = {}
+        self._kids = set()
+        self._private_keys = {}
+        self._public_keys = {}
 
         self.storage_key = storage_key
 
         self._load_keys()
 
     def _add_key(self, kid, priv_key):
-        self.kids.add(kid)
-        self.private_keys[kid] = priv_key
-        self.public_keys[kid] = priv_key.public_key()
+        self._kids.add(kid)
+        self._private_keys[kid] = priv_key
+        self._public_keys[kid] = priv_key.public_key()
 
     def _load_keys(self):
         pattern = os.path.join(self.priv_root, "*.pem")
@@ -92,17 +92,21 @@ class Store:
 
         self._save_file(self._key_filename(kid), pem)
 
+    @property
+    def kids(self) -> set:
+        return self._kids
+
     def get_public_key(self, kid: str) -> RSAPublicKeyWithSerialization:
-        if not kid in self.public_keys:
+        if not kid in self._public_keys:
             raise InvalidKeyID(kid)
 
-        return self.public_keys[kid]
+        return self._public_keys[kid]
 
     def get_private_key(self, kid: str) -> RSAPrivateKeyWithSerialization:
-        if not kid in self.private_keys:
+        if not kid in self._private_keys:
             raise InvalidKeyID(kid)
 
-        return self.private_keys[kid]
+        return self._private_keys[kid]
 
     def generate_key(self) -> str:
         private_key = rsa.generate_private_key(
@@ -111,7 +115,7 @@ class Store:
         )
 
         kid = secrets.token_bytes(Store.KID_SIZE).hex()
-        assert kid not in self.private_keys
+        assert kid not in self._private_keys
 
         self._save_key(kid, private_key)
         self._add_key(kid, private_key)
@@ -128,7 +132,7 @@ class Store:
             return '\n'.join(decoded.splitlines()[1:-1])
 
         keys = [{"kid": k, "public_key": pem(v)}
-                for k, v in self.public_keys.items()]
+                for k, v in self._public_keys.items()]
 
         return {
             "keys": keys
