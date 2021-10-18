@@ -7,7 +7,7 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.asymmetric import padding
-from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKeyWithSerialization
+from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKeyWithSerialization, RSAPublicKeyWithSerialization
 
 
 class InvalidKeyID(Exception):
@@ -15,6 +15,10 @@ class InvalidKeyID(Exception):
 
 
 class InvalidSignature(Exception):
+    pass
+
+
+class InvalidCiphertext(Exception):
     pass
 
 
@@ -88,6 +92,18 @@ class Store:
 
         self._save_file(self._key_filename(kid), pem)
 
+    def get_public_key(self, kid: str) -> RSAPublicKeyWithSerialization:
+        if not kid in self.public_keys:
+            raise InvalidKeyID(kid)
+
+        return self.public_keys[kid]
+
+    def get_private_key(self, kid: str) -> RSAPrivateKeyWithSerialization:
+        if not kid in self.private_keys:
+            raise InvalidKeyID(kid)
+
+        return self.private_keys[kid]
+
     def generate_key(self) -> str:
         private_key = rsa.generate_private_key(
             public_exponent=Store.PUBLIC_EXPONENT,
@@ -144,21 +160,7 @@ class Signer:
             "kid": self.kid
         }
 
-    def verify(self, data: bytes, sig: dict):
-        if "kid" not in sig:
-            raise InvalidSignature("kid: key not found")
-
-        if "sig" not in sig:
-            raise InvalidSignature("sig: key not found")
-
-        kid, signature = sig["kid"], sig["sig"]
-
-        if type(kid) is not str:
-            raise InvalidSignature(f"kid: should be of type str, got {type(kid).__name__}")
-
-        if type(signature) is not str:
-            raise InvalidSignature(f"sig: should be of type str, got {type(signature).__name__}")
-
+    def verify(self, kid: str, signature: str, data: bytes):
         try:
             signature = bytes.fromhex(signature)
         except ValueError as e:
@@ -182,3 +184,36 @@ class Signer:
 
         except cryptography.exceptions.InvalidSignature as e:
             raise InvalidSignature("invalid signature")
+
+
+class Encryptor:
+    def __init__(self, store: Store):
+        self.store = store
+
+    def encrypt(self, kid: str, data: bytes) -> bytes:
+        public_key = self.store.get_public_key(kid)
+
+        return public_key.encrypt(
+            data,
+            padding.OAEP(
+                mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                algorithm=hashes.SHA256(),
+                label=None
+            )
+        )
+
+    def decrypt(self, kid: str, data: bytes) -> bytes:
+        private_key = self.store.get_private_key(kid)
+
+        try:
+            return private_key.decrypt(
+                data,
+                padding.OAEP(
+                    mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                    algorithm=hashes.SHA256(),
+                    label=None
+                )
+            )
+
+        except ValueError as e:
+            raise InvalidCiphertext(e)
