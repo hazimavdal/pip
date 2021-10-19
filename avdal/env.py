@@ -3,16 +3,22 @@ import re
 from . import annotations
 
 _envre = re.compile(r'''^(?:export\s*)?([_a-zA-Z][\w_]*)\s*=\s*(.*)$''')
-_varre = re.compile(r'''^(?!\\)\$([\w_]+)''')
+_varexp = re.compile(r'''\{\{(.*?)\}\}''')
+_varname = re.compile(r'''^\s*([\w_]+)\s*$''')
 _include_re = re.compile(r'''^#include\s+(.*)\s*$''')
 
 
 def expandvars(value):
-    for var in _varre.findall(value):
-        if var not in os.environ:
-            raise Exception(f"{var}: unbound variable")
+    for var in _varexp.findall(value):
+        match = _varname.match(var)
+        if not match:
+            raise Exception(f"[{var}]: invalid variable name")
 
-        value = value.replace(f"${var}", os.environ.get(var))
+        varname = match.group(1)
+        if varname not in os.environ:
+            raise Exception(f"{varname}: unbounded variable")
+
+        value = value.replace(f"{{{{{var}}}}}", os.environ.get(varname))
 
     return value
 
@@ -50,7 +56,7 @@ class Env:
         self.prefix = prefix + "_" if prefix else ""
 
     @annotations.enforce_types
-    def __call__(self, var: str, default: any = None, cast: type = str):
+    def __call__(self, var: str, default: any = None, cast: type = str, nullable=False):
         value = os.environ.get(f"{self.prefix}{var}")
 
         if value is None:
@@ -60,6 +66,9 @@ class Env:
             value = default
 
         if value is None:
+            if nullable:
+                return None
+
             raise Exception(f"{var} [prefix={self.prefix}] not found. Declare it as environment variable or provide a default value.")
 
         if cast is not str:
