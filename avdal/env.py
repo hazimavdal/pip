@@ -8,7 +8,6 @@ _include_re = re.compile(r'''^#include\s+(.*)\s*$''')
 
 
 def expandvars(value):
-    print("aaa", value)
     for var in _varre.findall(value):
         if var not in os.environ:
             raise Exception(f"{var}: unbound variable")
