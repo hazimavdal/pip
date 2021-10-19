@@ -1,0 +1,32 @@
+A = 1
+A = 2
+A=a_final_value
+
+b_c_d = "aaac"
+
+a-b = "aaac"
+
+var1=
+var2 =
+
+var3 = a{{var1}}b{{var2}}
+var4 =a{{var1}}b{{var2}} ab
+
+var5 = {var1}
+
+PREFIX_SOME_VAR = aa
+SOME_VAR = bb
+
+v1 = "aa"
+V1 = cc
+
+V2 = 'dd'
+v2 = 'bb'
+
+v3 = " "
+v4 = 
+v5 = ' '
+
+v6 = {{ v1 }}
+v7 = {{v1     }}
+v8 = {{       v1}}

@@ -1,0 +1,81 @@
+{
+    "A": {
+        "value": "a_final_value",
+        "cast": "str"
+    },
+    "b_c_d": {
+        "value": "aaac",
+        "cast": "str"
+    },
+    "a-b": {
+        "masked": true
+    },
+    "var1": {
+        "value": "",
+        "cast": "str"
+    },
+    "var2": {
+        "value": "",
+        "cast": "str"
+    },
+    "var3": {
+        "value": "ab",
+        "cast": "str"
+    },
+    "var4": {
+        "value": "ab ab",
+        "cast": "str"
+    },
+    "var5": {
+        "value": "{var1}",
+        "cast": "str"
+    },
+    "PREFIX_SOME_VAR": {
+        "value": "aa",
+        "cast": "str"
+    },
+    "SOME_VAR": {
+        "value": "aa",
+        "cast": "str"
+    },
+    "v1": {
+        "value": "aa",
+        "cast": "str"
+    },
+    "v2": {
+        "value": "bb",
+        "cast": "str"
+    },
+    "v3": {
+        "value": " ",
+        "cast": "str"
+    },
+    "v4": {
+        "value": "",
+        "cast": "str"
+    },
+    "v5": {
+        "value": " ",
+        "cast": "str"
+    },
+    "V1": {
+        "value": "cc",
+        "cast": "str"
+    },
+    "V2": {
+        "value": "dd",
+        "cast": "str"
+    },
+    "v6": {
+        "value": "aa",
+        "cast": "str"
+    },
+    "v7": {
+        "value": "aa",
+        "cast": "str"
+    },
+    "v8": {
+        "value": "aa",
+        "cast": "str"
+    }
+}

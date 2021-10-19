@@ -1,6 +1,10 @@
+import os
+import json
 import unittest
 from avdal import annotations
 from avdal import rbac
+import avdal.env
+from avdal.dict import AttrDict
 
 
 def fails(f, *args, **kwargs):
@@ -72,7 +76,6 @@ class TestRbac(unittest.TestCase):
         self.assertFalse(r1.check("*", {"write"}))
         self.assertTrue(r1.check("*", {"*"}))
 
-
         r2 = rbac.PermSet("rn:a:b", "write")
 
         self.assertFalse(r2.check("rn:a:b", {"read"}))
@@ -95,3 +98,21 @@ class TestRbac(unittest.TestCase):
         self.assertFalse(r3.check("rn:a:c", {"read"}))
         self.assertFalse(r3.check("rn:a", {"read"}))
 
+
+class TestEnv(unittest.TestCase):
+    def test_load_env(self):
+        os.environ.clear()
+        avdal.env.load_env("tests/test_env")
+        env = avdal.env.Env(prefix="PREFIX")
+
+        expects = AttrDict.from_file("tests/test_env.json")
+
+        for var, v in expects.items():
+            if v.masked:
+                assert env(var, nullable=True) is None, f"{var}: unexpected environment variable"
+                continue
+
+            actual = env(var)
+            cast = eval(getattr(v, "cast", "str"))
+
+            assert cast(actual) == v.value, f"expected [{v.value}], got [{actual}]"
