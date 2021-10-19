@@ -131,8 +131,12 @@ class Store:
 
             return '\n'.join(decoded.splitlines()[1:-1])
 
-        keys = [{"kid": k, "public_key": pem(v)}
-                for k, v in self._public_keys.items()]
+        keys = [{
+            "kid": k,
+            "public_key": pem(v),
+            "size": v.key_size
+        }
+            for k, v in self._public_keys.items()]
 
         return {
             "keys": keys
