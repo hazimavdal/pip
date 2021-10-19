@@ -3,8 +3,19 @@ import re
 from . import annotations
 
 _envre = re.compile(r'''^(?:export\s*)?([_a-zA-Z][\w_]*)\s*=\s*(.*)$''')
-_varre = re.compile(r'''\$([\w_]+)''')
+_varre = re.compile(r'''^(?!\\)\$([\w_]+)''')
 _include_re = re.compile(r'''^#include\s+(.*)\s*$''')
+
+
+def expandvars(value):
+    print("aaa", value)
+    for var in _varre.findall(value):
+        if var not in os.environ:
+            raise Exception(f"{var}: unbound variable")
+
+        value = value.replace(f"${var}", os.environ.get(var))
+
+    return value
 
 
 def load_env(env_file: str):
@@ -31,10 +42,8 @@ def load_env(env_file: str):
             if match is not None:
                 key = match.group(1)
                 value = match.group(2).strip('"').strip("'")
-                for var in _varre.findall(value):
-                    value = value.replace(f"${var}", os.environ.get(var, ""))
 
-                os.environ[key] = value
+                os.environ[key] = expandvars(value)
 
 
 class Env:

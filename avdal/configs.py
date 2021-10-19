@@ -1,7 +1,7 @@
 import os
 import socket
 import requests as req
-from .env import Env
+from .env import Env, expandvars
 from .auth.keycloak import Keycloak
 
 
@@ -42,7 +42,7 @@ def load_configs(app_role):
 
         for k, v in res.json().items():
             if k not in os.environ:
-                os.environ[k] = str(v)
+                os.environ[k] = expandvars(str(v))
 
         print(f"loaded role: {role}")
 
