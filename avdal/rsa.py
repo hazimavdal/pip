@@ -108,10 +108,10 @@ class Store:
 
         return self._private_keys[kid]
 
-    def generate_key(self) -> str:
+    def generate_key(self, key_size = Store.KEY_SIZE) -> str:
         private_key = rsa.generate_private_key(
             public_exponent=Store.PUBLIC_EXPONENT,
-            key_size=Store.KEY_SIZE,
+            key_size=key_size,
         )
 
         kid = secrets.token_bytes(Store.KID_SIZE).hex()
