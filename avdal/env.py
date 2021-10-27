@@ -56,7 +56,7 @@ class Env:
         self.prefix = prefix + "_" if prefix else ""
 
     @annotations.enforce_types
-    def __call__(self, var: str, default: any = None, cast: type = str, nullable=False):
+    def __call__(self, var: str, default: any = None, cast: any = str, nullable=False):
         value = os.environ.get(f"{self.prefix}{var}")
 
         if value is None:
