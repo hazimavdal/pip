@@ -23,6 +23,7 @@ class Field:
         self.env_name = env_name
 
     def __set_name__(self, owner, name):
+        assert issubclass(owner, Base), f"{owner.__name__} does not inherit {Base.__name__}"
         self.varname = self.env_name or name.upper()
 
     def _load_var(self, var, obj: Base, objtype=None):
