@@ -3,21 +3,15 @@ from collections.abc import Mapping
 
 
 class Base:
-    def __init__(self, envs: List[Mapping] = []):
-        self._envs = envs
+    class Meta:
+        envs = []
 
     def add_env(self, env: Mapping):
-        if not getattr(self, "_envs", None):
-            self._envs = []
-
-        self._envs.append(env)
+        self.Meta.envs.append(env)
 
     @property
     def envs(self) -> Iterator[Mapping]:
-        if not getattr(self, "_envs", None):
-            self._envs = []
-
-        for env in self._envs:
+        for env in self.Meta.envs:
             yield env
 
 
