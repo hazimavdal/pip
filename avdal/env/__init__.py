@@ -45,7 +45,7 @@ class Environment(Mapping):
 
 
 class DotEnv(Environment):
-    def expandvars(self, value):
+    def _expandvars(self, value):
         for var in _varexp.findall(value):
             match = _varname.match(var)
             if not match:
@@ -59,7 +59,7 @@ class DotEnv(Environment):
 
         return value
 
-    def load_env(self, env_file: str):
+    def _load_env(self, env_file: str):
         env_file = os.path.abspath(env_file)
 
         if env_file in self.envs:
@@ -75,17 +75,20 @@ class DotEnv(Environment):
                 match = _include_re.match(line)
                 if match is not None:
                     file = match.group(1).strip()
-                    self.load_env(file)
+                    self._load_env(file)
 
                 match = _envre.match(line)
                 if match is not None:
                     key = match.group(1)
                     value = match.group(2).strip('"').strip("'")
 
-                    self.vars[key] = self.expandvars(value)
+                    self.vars[key] = self._expandvars(value)
 
-    def __init__(self, env_file: str):
+    def __init__(self, *env_files):
         self.vars = {}
         self.envs = set()
-        self.load_env(env_file)
+
+        for file in env_files:
+            self._load_env(file)
+
         super(DotEnv, self).__init__(self.vars)
