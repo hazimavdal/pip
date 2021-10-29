@@ -39,7 +39,7 @@ class Environment(Mapping):
         return len(self._data)
 
     def __repr__(self) -> str:
-        return '({{{}}})'.format(', '.join(
+        return "{}({{{}}})".format(type(self).__name__, ', '.join(
             ('{!r}: {!r}'.format(key, value)
              for key, value in self._data.items())))
 
