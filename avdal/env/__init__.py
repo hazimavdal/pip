@@ -1,6 +1,7 @@
 import os
 import re
-
+from typing import List
+from collections.abc import Mapping
 
 _envre = re.compile(r'''^(?:export\s*)?([_a-zA-Z][\w_]*)\s*=\s*(.*)$''')
 _varexp = re.compile(r'''\{\{(.*?)\}\}''')
@@ -8,10 +9,42 @@ _varname = re.compile(r'''^\s*([\w_]+)\s*$''')
 _include_re = re.compile(r'''^#include\s+(.*)\s*$''')
 
 
-class DotEnv:
-    def get(self, key, default=None):
-        return self.vars.get(key, default)
+class Environment(Mapping):
+    def __init__(self, data: Mapping):
+        self._data = data
 
+    def union(self, other: Mapping):
+        return Environment({**self, **other})
+
+    def get(self, key: str, default=None, nullable=False, mapper=lambda x: x):
+        value = self._data.get(key)
+
+        if value is not None:
+            return mapper(value)
+
+        if default is None and not nullable:
+            raise Exception(f"{key} not found. Declare it as environment variable or provide a default value.")
+
+        return mapper(default)
+
+    def __getitem__(self, k):
+        return self._data[k]
+
+    def __iter__(self):
+        keys = list(self._data)
+        for key in keys:
+            yield key
+
+    def __len__(self):
+        return len(self._data)
+
+    def __repr__(self) -> str:
+        return '({{{}}})'.format(', '.join(
+            ('{!r}: {!r}'.format(key, value)
+             for key, value in self._data.items())))
+
+
+class DotEnv(Environment):
     def expandvars(self, value):
         for var in _varexp.findall(value):
             match = _varname.match(var)
@@ -20,7 +53,7 @@ class DotEnv:
 
             varname = match.group(1)
             if varname not in self.vars:
-                raise Exception(f"{varname}: unbounded variable")
+                raise Exception(f"[{varname}]: unbounded variable")
 
             value = value.replace(f"{{{{{var}}}}}", self.vars.get(varname))
 
@@ -55,3 +88,4 @@ class DotEnv:
         self.vars = {}
         self.envs = set()
         self.load_env(env_file)
+        super(DotEnv, self).__init__(self.vars)

@@ -1,18 +1,8 @@
-from typing import List, Iterator
-from collections.abc import Mapping
+from ..env import Environment
 
 
 class Base:
-    class Meta:
-        envs = []
-
-    def add_env(self, env: Mapping):
-        self.Meta.envs.append(env)
-
-    @property
-    def envs(self) -> Iterator[Mapping]:
-        for env in self.Meta.envs:
-            yield env
+    environ: Environment = None
 
 
 class Field:
@@ -24,29 +14,15 @@ class Field:
 
     def __set_name__(self, owner, name):
         assert issubclass(owner, Base), f"{owner.__name__} does not inherit {Base.__name__}"
+        assert owner.environ is not None, "environ is not set on this object"
+
         self.varname = self.env_name or name.upper()
 
-    def _load_var(self, var, obj: Base, objtype=None):
-        for env in obj.envs:
-            value = env.get(var)
-            if value:
-                return value
-
-        return None
-
-    def __get__(self, obj, objtype=None):
-        value = self._load_var(self.varname, obj, objtype)
-
-        if value is None:
-            value = self.default
-
-        if value is None:
-            if self.nullable:
-                return None
-
-            raise Exception(f"{self.varname} not found. Declare it as environment variable or provide a default value.")
-
-        return self.mapper(value)
+    def __get__(self, obj: Base, objtype=None):
+        return obj.environ.get(key=self.varname,
+                               default=self.default,
+                               nullable=self.nullable,
+                               mapper=self.mapper)
 
     def __set__(self, obj, value):
         raise AttributeError("cannot set read-only attribute")
