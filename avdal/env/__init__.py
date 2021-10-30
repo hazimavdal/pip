@@ -31,9 +31,7 @@ class Environment(Mapping):
         return self._data[k]
 
     def __iter__(self):
-        keys = list(self._data)
-        for key in keys:
-            yield key
+        return (k for k in self._data)
 
     def __len__(self):
         return len(self._data)
