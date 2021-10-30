@@ -2,7 +2,8 @@ from ..env import Environment
 
 
 class Base:
-    environ: Environment = None
+    class Meta:
+        environ: Environment = None
 
 
 class Field:
@@ -14,12 +15,12 @@ class Field:
 
     def __set_name__(self, owner, name):
         assert issubclass(owner, Base), f"{owner.__name__} does not inherit {Base.__name__}"
-        assert owner.environ is not None, "environ is not set on this object"
+        assert owner.Meta.environ is not None, "environ is not set on this object"
 
         self.varname = self.env_name or name.upper()
 
     def __get__(self, obj: Base, objtype=None):
-        return obj.environ.get(key=self.varname,
+        return obj.Meta.environ.get(key=self.varname,
                                default=self.default,
                                nullable=self.nullable,
                                mapper=self.mapper)
