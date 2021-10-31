@@ -10,8 +10,10 @@ _include_re = re.compile(r'''^#include\s+(.*)\s*$''')
 
 
 class Environment(MutableMapping):
-    def __init__(self, data: Mapping = {}):
+    def __init__(self, data: Mapping, prefix=None):
         self._data = dict(data)
+        self.prefix = prefix
+        self.prefixf = lambda x: x if not prefix else f"{prefix}_{x}"
 
     def _expand(self, value):
         for var in _varexp.findall(value):
@@ -28,10 +30,10 @@ class Environment(MutableMapping):
         return value
 
     def union(self, other: Mapping):
-        return Environment({**self, **other})
+        return Environment({**self, **other}, prefix=self.prefix)
 
     def get(self, key: str, default=None, nullable=False, mapper=lambda x: x):
-        value = self._data.get(key)
+        value = super().get(self.prefixf(key)) or self._data.get(key)
 
         if value is not None:
             return mapper(value)
@@ -90,8 +92,8 @@ class DotEnv(Environment):
 
         return vars
 
-    def __init__(self, *env_files):
-        super(DotEnv, self).__init__()
+    def __init__(self, *env_files, **kwargs):
+        super(DotEnv, self).__init__({}, **kwargs)
         self.envs = set()
 
         for file in env_files:

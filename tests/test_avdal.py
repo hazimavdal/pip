@@ -1,9 +1,8 @@
-import os
 import json
 import unittest
 from avdal import annotations
 from avdal import rbac
-import avdal.env
+from avdal.env import DotEnv
 from avdal.dict import AttrDict
 
 
@@ -101,18 +100,16 @@ class TestRbac(unittest.TestCase):
 
 class TestEnv(unittest.TestCase):
     def test_load_env(self):
-        os.environ.clear()
-        avdal.env.load_env("tests/test_env")
-        env = avdal.env.Env(prefix="PREFIX")
+        env = DotEnv("tests/test_env", prefix="PREFIX")
 
         expects = AttrDict.from_file("tests/test_env.json")
 
         for var, v in expects.items():
             if v.masked:
-                assert env(var, nullable=True) is None, f"{var}: unexpected environment variable"
+                assert env.get(var, nullable=True) is None, f"{var}: unexpected environment variable"
                 continue
 
-            actual = env(var)
+            actual = env.get(var)
             cast = eval(getattr(v, "cast", "str"))
 
-            assert cast(actual) == v.value, f"expected [{v.value}], got [{actual}]"
+            assert cast(actual) == v.value, f"{var}: expected [{v.value}], got [{actual}]"
