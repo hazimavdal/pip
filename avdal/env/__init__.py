@@ -11,7 +11,7 @@ _include_re = re.compile(r'''^#include\s+(.*)\s*$''')
 
 class Environment(MutableMapping):
     def __init__(self, *args, **kwargs):
-        self.__dict__.update(*args, **kwargs)
+        self._data = dict(*args, **kwargs)
 
     def _expand(self, value):
         for var in _varexp.findall(value):
@@ -31,7 +31,7 @@ class Environment(MutableMapping):
         return Environment({**self, **other})
 
     def get(self, key: str, default=None, nullable=False, mapper=lambda x: x):
-        value = self.__dict__.get(key)
+        value = self._data.get(key)
 
         if value is not None:
             return mapper(value)
@@ -42,24 +42,24 @@ class Environment(MutableMapping):
         return mapper(default)
 
     def __setitem__(self, key, value):
-        self.__dict__[key] = self._expand(value)
+        self._data[key] = self._expand(value)
 
     def __getitem__(self, key):
-        return self.__dict__[key]
+        return self._data[key]
 
     def __delitem__(self, key):
-        del self.__dict__[key]
+        del self._data[key]
 
     def __iter__(self):
-        return iter(self.__dict__)
+        return iter(self._data)
 
     def __len__(self):
-        return len(self.__dict__)
+        return len(self._data)
 
     def __repr__(self) -> str:
         return "{}({{{}}})".format(type(self).__name__, ', '.join(
             ('{!r}: {!r}'.format(key, value)
-             for key, value in self.__dict__.items())))
+             for key, value in self._data.items())))
 
 
 class DotEnv(Environment):
