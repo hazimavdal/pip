@@ -10,8 +10,8 @@ _include_re = re.compile(r'''^#include\s+(.*)\s*$''')
 
 
 class Environment(MutableMapping):
-    def __init__(self, *args, **kwargs):
-        self._data = dict(*args, **kwargs)
+    def __init__(self, data: Mapping = {}):
+        self._data = dict(data)
 
     def _expand(self, value):
         for var in _varexp.findall(value):
