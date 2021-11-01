@@ -7,9 +7,9 @@ class Base:
 
 
 class Field:
-    def __init__(self, env_name=None, default=None, nullable=False, mapper=lambda x: x):
+    def __init__(self, env_name=None, default=None, nullable=False, cast=lambda x: x):
         self.default = default
-        self.mapper = mapper
+        self.cast = cast
         self.nullable = nullable
         self.env_name = env_name
 
@@ -23,7 +23,7 @@ class Field:
         return obj.Meta.environ.get(key=self.varname,
                                default=self.default,
                                nullable=self.nullable,
-                               mapper=self.mapper)
+                               mapper=self.cast)
 
     def __set__(self, obj, value):
         raise AttributeError("cannot set read-only attribute")
