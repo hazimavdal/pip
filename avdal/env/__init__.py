@@ -43,8 +43,8 @@ class Environment(MutableMapping):
 
         return mapper(default)
 
-    def __call__(self, key: str, default=None, nullable=False, mapper=lambda x: x):
-        return self.get(key, default, nullable, mapper)
+    def __call__(self, key: str, default=None, nullable=False, cast=lambda x: x):
+        return self.get(key, default, nullable, cast)
 
     def __setitem__(self, key, value):
         self._data[key] = self._expand(value)
