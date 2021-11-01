@@ -20,10 +20,13 @@ class Field:
         self.varname = self.env_name or name.upper()
 
     def __get__(self, obj: Base, objtype=None):
+        if obj is None:
+            obj = objtype
+
         return obj.Meta.environ.get(key=self.varname,
-                               default=self.default,
-                               nullable=self.nullable,
-                               mapper=self.cast)
+                                    default=self.default,
+                                    nullable=self.nullable,
+                                    mapper=self.cast)
 
     def __set__(self, obj, value):
         raise AttributeError("cannot set read-only attribute")
