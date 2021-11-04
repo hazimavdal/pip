@@ -13,7 +13,7 @@ class Field:
         self.nullable = nullable
         self.env_name = env_name
 
-    def __set_name__(self, owner, name):
+    def __set_name__(self, owner: Base, name):
         assert issubclass(owner, Base), f"{owner.__name__} does not inherit {Base.__name__}"
         assert owner.Meta.environ is not None, "environ is not set on this object"
 
