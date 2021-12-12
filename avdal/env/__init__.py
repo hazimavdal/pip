@@ -16,6 +16,9 @@ class Environment(MutableMapping):
         self.prefixf = lambda x: x if not prefix else f"{prefix}_{x}"
 
     def _expand(self, value):
+        if type(value) is not str:
+            return value
+
         for var in _varexp.findall(value):
             match = _varname.match(var)
             if not match:
