@@ -104,3 +104,12 @@ class DotEnv(Environment):
 
         for file in env_files:
             self._load_env(file)
+
+
+def enrich_environ(*env_files, **kwargs):
+    if len(env_files) == 0:
+        env_files = [".env"]
+
+    for key, value in DotEnv(*env_files, **kwargs).items():
+        if key not in os.environ:
+            os.environ[key] = value
