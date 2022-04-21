@@ -11,7 +11,10 @@ class AttrDict(dict):
                 self[k] = AttrDict(v)
 
     def __getattr__(self, name):
-        return None
+        try:
+            return self[name]
+        except KeyError:
+            raise AttributeError(name)
 
     def from_file(filename):
         with open(filename, "r") as f:
