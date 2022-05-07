@@ -19,11 +19,17 @@ class MemoryCache(Cache):
         return value
 
     def set(self, key, value, ttl=None):
+        exp = None
+
+        if ttl is not None:
+            exp = int(time.time()) + ttl
+
         self.lock.acquire()
-        self.cache[key] = (value, ttl)
+        self.cache[key] = (value, exp)
         self.lock.release()
 
     def incr(self, key, amount=1):
+        now = int(time.time())
         self.lock.acquire()
 
         if key in self.cache:
@@ -37,7 +43,7 @@ class MemoryCache(Cache):
         self.lock.acquire()
 
         for key in list(self.cache.keys()):
-            if self.cache[key][1] is not None and self.cache[key][1] < 0:
+            if self.cache[key][1] is not None and self.cache[key][1] < now:
                 del self.cache[key]
 
         self.lock.release()
