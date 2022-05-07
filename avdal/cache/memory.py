@@ -9,13 +9,21 @@ class MemoryCache(Cache):
         self.lock = threading.RLock()
 
         if autocleanup:
-            self.cleanup_thread = threading.Thread(target=self.cleanup)
+            def cleanup_loop():
+                while True:
+                    self.cleanup()
+                    time.sleep(5)
+
+            self.cleanup_thread = threading.Thread(target=cleanup_loop)
             self.cleanup_thread.start()
 
     def get(self, key):
         self.lock.acquire()
-        value, _ = self.cache.get(key, (None, None))
+        value, ttl = self.cache.get(key, (None, None))
         self.lock.release()
+
+        if ttl and ttl < int(time.time()):
+            return None
 
         return value
 
@@ -45,6 +53,7 @@ class MemoryCache(Cache):
 
         for key, (_, exp) in list(self.cache.items()):
             if exp and exp < now:
+                print("Removing expired key:", key)
                 del self.cache[key]
 
         self.lock.release()
