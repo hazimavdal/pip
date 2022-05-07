@@ -49,6 +49,8 @@ class MemoryCache(Cache):
         self.lock.release()
 
     def cleanup(self):
+        now = int(time.time())
+
         self.lock.acquire()
 
         for key, (_, exp) in list(self.cache.items()):
