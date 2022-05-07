@@ -43,8 +43,8 @@ class MemoryCache(Cache):
     def cleanup(self):
         self.lock.acquire()
 
-        for key in list(self.cache.keys()):
-            if self.cache[key][1] is not None and self.cache[key][1] < now:
+        for key, (_, exp) in list(self.cache.items()):
+            if exp and exp < now:
                 del self.cache[key]
 
         self.lock.release()
