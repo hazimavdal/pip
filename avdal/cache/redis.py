@@ -2,7 +2,7 @@ import redis
 from . import Cache
 
 
-class Redis(Cache):
+class RedisCache(Cache):
     def __init__(self, host, port, pwd):
         self.prefix = prefix
         self.host = host
