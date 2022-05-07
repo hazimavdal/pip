@@ -1,27 +1,19 @@
 import redis
+from . import Cache
 
 
-class Redis:
-    def __init__(self, host, port, pwd, prefix=None):
+class Redis(Cache):
+    def __init__(self, host, port, pwd):
         self.prefix = prefix
         self.host = host
         self.port = port
         self.client = redis.Redis(host=self.host, port=self.port, password=pwd)
 
     def incr(self, key, amount=1):
-        if self.prefix:
-            key = self.prefix + key
-
         return self.client.incr(key, amount)
 
     def set(self, key, value, ttl=None):
-        if self.prefix:
-            key = self.prefix + key
-
         self.client.set(key, value, ttl)
 
     def get(self, key):
-        if self.prefix:
-            key = self.prefix + key
-
         return self.client.get(key)
