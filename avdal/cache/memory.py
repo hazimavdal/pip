@@ -13,7 +13,7 @@ class MemoryCache(Cache):
 
     def get(self, key):
         self.lock.acquire()
-        value = self.cache.get(key)
+        value, _ = self.cache.get(key, (None, None))
         self.lock.release()
 
         return value
