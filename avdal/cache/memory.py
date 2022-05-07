@@ -55,7 +55,6 @@ class MemoryCache(Cache):
 
         for key, (_, exp) in list(self.cache.items()):
             if exp and exp < now:
-                print("Removing expired key:", key)
                 del self.cache[key]
 
         self.lock.release()
