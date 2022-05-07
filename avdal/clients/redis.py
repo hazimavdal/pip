@@ -8,6 +8,12 @@ class Redis:
         self.port = port
         self.client = redis.Redis(host=self.host, port=self.port, password=pwd)
 
+    def incr(self, key, amount=1):
+        if self.prefix:
+            key = self.prefix + key
+
+        return self.client.incr(key, amount)
+
     def set(self, key, value, ttl=None):
         if self.prefix:
             key = self.prefix + key
