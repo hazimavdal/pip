@@ -4,8 +4,9 @@ import logging
 from logging import handlers
 
 
-def get_logger(appname, filename=None, stdout=True, level=logging.INFO):
+def get_logger(appname, filename=None, stdout=True, level=logging.DEBUG):
     logger = logging.getLogger(appname)
+    formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(filename)s:%(lineno)d - %(message)s')
 
     if filename:
         base, name_ext = os.path.split(filename)
@@ -13,15 +14,13 @@ def get_logger(appname, filename=None, stdout=True, level=logging.INFO):
         date = time.strftime('%Y-%m-%d')
         filename = os.path.join(base, f"{name}_{date}{ext}")
 
-        log_formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(filename)s:%(lineno)d - %(message)s')
-
         file = handlers.TimedRotatingFileHandler(filename, when='D')
-        file.setFormatter(log_formatter)
+        file.setFormatter(formatter)
         logger.addHandler(file)
 
     if stdout:
         stdout = logging.StreamHandler()
-        stdout.setFormatter(log_formatter)
+        stdout.setFormatter(formatter)
         logger.addHandler(stdout)
 
     logger.setLevel(level)
