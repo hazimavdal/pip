@@ -105,11 +105,11 @@ class TestEnv(unittest.TestCase):
         expects = AttrDict.from_file("tests/test_env.json")
 
         for var, v in expects.items():
-            if v.masked:
+            if v.get("masked"):
                 assert env.get(var, nullable=True) is None, f"{var}: unexpected environment variable"
                 continue
 
-            actual = env.get(var)
             cast = eval(getattr(v, "cast", "str"))
+            actual = env.get(var, mapper=cast)
 
             assert cast(actual) == v.value, f"{var}: expected [{v.value}], got [{actual}]"

@@ -77,5 +77,33 @@
     "v8": {
         "value": "aa",
         "cast": "str"
+    },
+    "v9": {
+        "value": false,
+        "cast": "bool"
+    },
+    "v10": {
+        "value": true,
+        "cast": "bool"
+    },
+    "v11": {
+        "value": false,
+        "cast": "bool"
+    },
+    "v12": {
+        "value": true,
+        "cast": "bool"
+    },
+    "v13": {
+        "value": false,
+        "cast": "bool"
+    },
+    "v14": {
+        "value": true,
+        "cast": "bool"
+    },
+    "v15": {
+        "value": false,
+        "cast": "bool"
     }
 }

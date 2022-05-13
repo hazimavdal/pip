@@ -30,3 +30,11 @@ v5 = ' '
 v6 = {{ v1 }}
 v7 = {{v1     }}
 v8 = {{       v1}}
+
+v9 = false
+v10 = true
+v11 = False
+v12 = True
+v13 = 0
+v14 = 1
+v15 = -1

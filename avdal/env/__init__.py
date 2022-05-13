@@ -9,6 +9,22 @@ _varname = re.compile(r'''^\s*([\w_]+)\s*$''')
 _include_re = re.compile(r'''^#include\s+(.*)\s*$''')
 
 
+def _cast_bool(value):
+    try:
+        if int(value) == 1:
+            return True
+        return False
+    except:
+        pass
+
+    if value.lower() in ["true", "yes", "on"]:
+        return True
+    elif value.lower() in ["false", "no", "off"]:
+        return False
+
+    raise ValueError("Invalid boolean value: {}".format(value))
+
+
 class Environment(MutableMapping):
     def __init__(self, data: Mapping, prefix=None):
         self._data = dict(data)
@@ -35,7 +51,13 @@ class Environment(MutableMapping):
     def union(self, other: Mapping):
         return Environment({**self, **other}, prefix=self.prefix)
 
-    def get(self, key: str, default=None, nullable=False, mapper=lambda x: x):
+    def get(self, key: str, default=None, nullable=False, mapper=None):
+        if not mapper:
+            def mapper(x): return x
+
+        if mapper is bool:
+            mapper = _cast_bool
+
         value = super().get(self.prefixf(key)) or self._data.get(key)
 
         if value is not None:
