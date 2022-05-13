@@ -4,7 +4,6 @@ from . import Cache
 
 class RedisCache(Cache):
     def __init__(self, host, port, pwd):
-        self.prefix = prefix
         self.host = host
         self.port = port
         self.client = redis.Redis(host=self.host, port=self.port, password=pwd)
