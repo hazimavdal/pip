@@ -67,3 +67,22 @@ def auto_attrs(f: t.Callable) -> t.Callable:
 
     wrapper.__name__ = f.__name__
     return wrapper
+
+
+class Counted:
+    def __init__(self, limit, handler=None):
+        self.limit = limit
+        self.handler = handler
+
+    def __call__(self, func):
+        def wrapper(*args, **kwargs):
+            if self.limit > 0:
+                self.limit -= 1
+                return func(*args, **kwargs)
+            else:
+                if self.handler:
+                    return self.handler()
+
+                raise Exception("Reached maximum number of calls")
+
+        return wrapper
