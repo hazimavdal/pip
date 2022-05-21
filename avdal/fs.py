@@ -3,6 +3,17 @@ import re
 from queue import Queue
 
 
+def unique_filename(path):
+    i = 0
+    base, ext = os.path.splitext(path)
+
+    while os.path.exists(path):
+        path = f'{base}_c{i}{ext}'
+        i += 1
+
+    return path
+
+
 def ls_files(dir, recursive=True, absolute=True, inclusion=None, exclusion=None, ext=None, limit=None):
     q = Queue()
 
