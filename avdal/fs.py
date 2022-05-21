@@ -3,14 +3,14 @@ import re
 from queue import Queue
 
 
-traversal_opts = {
-    "recursive": True,
-    "absolute": True,
-    "inclusion": None,
-    "exclusion": None,
-    "ext": None,
-    "limit": None,
-}
+class TraversalOptions:
+    def __init__(self, **kwargs):
+        self.recursive = kwargs.get("recursive", False)
+        self.absolute = kwargs.get("absolute", False)
+        self.inclusion = kwargs.get("inclusion", None)
+        self.exclusion = kwargs.get("exclusion", None)
+        self.ext = kwargs.get("ext", None)
+        self.limit = kwargs.get("limit", None)
 
 
 def unique_filename(path):
@@ -24,35 +24,36 @@ def unique_filename(path):
     return path
 
 
-def ls_files(dir, **traversal_opts):
+def ls_files(dir, **kwargs):
+    opts = TraversalOptions(**kwargs)
     q = Queue()
 
-    if absolute:
+    if opts.absolute:
         dir = os.path.abspath(dir)
 
     q.put(dir)
 
-    while not q.empty() and (limit is None or limit > 0):
+    while not q.empty() and (opts.limit is None or opts.limit > 0):
         for entry in os.scandir(q.get()):
-            if recursive and entry.is_dir(follow_symlinks=False):
+            if opts.recursive and entry.is_dir(follow_symlinks=False):
                 q.put(entry.path)
                 continue
 
             if not entry.is_file(follow_symlinks=False):
                 continue
 
-            if ext is not None and not entry.name.endswith(ext):
+            if opts.ext is not None and not entry.name.endswith(opts.ext):
                 continue
 
-            if inclusion and not re.match(inclusion, entry.name):
+            if opts.inclusion and not re.match(opts.inclusion, entry.name):
                 continue
 
-            if exclusion and re.match(exclusion, entry.name):
+            if opts.exclusion and re.match(opts.exclusion, entry.name):
                 continue
 
-            if limit is not None:
-                limit -= 1
-                if limit < 0:
+            if opts.limit is not None:
+                opts.limit -= 1
+                if opts.limit < 0:
                     break
 
             yield entry
