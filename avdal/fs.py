@@ -9,6 +9,7 @@ class TraversalOptions:
         self.absolute = kwargs.get("absolute", False)
         self.inclusion = kwargs.get("inclusion", None)
         self.exclusion = kwargs.get("exclusion", None)
+        self.folder_exclusion = kwargs.get("folder_exclusion", [])
         self.ext = kwargs.get("ext", None)
         self.limit = kwargs.get("limit", None)
 
@@ -36,7 +37,8 @@ def ls_files(dir, **kwargs):
     while not q.empty() and (opts.limit is None or opts.limit > 0):
         for entry in os.scandir(q.get()):
             if opts.recursive and entry.is_dir(follow_symlinks=False):
-                q.put(entry.path)
+                if entry.name not in opts.folder_exclusion:
+                    q.put(entry.path)
                 continue
 
             if not entry.is_file(follow_symlinks=False):
@@ -60,4 +62,4 @@ def ls_files(dir, **kwargs):
 
 
 def transform_snake_case(path: str):
-    return '_'.join(path.name.split()).replace('&', "and").replace('-', '_').lower()
+    return '_'.join(path.split()).replace('&', "and").replace('-', '_').lower()
