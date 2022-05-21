@@ -3,6 +3,16 @@ import re
 from queue import Queue
 
 
+traversal_opts = {
+    "recursive": True,
+    "absolute": True,
+    "inclusion": None,
+    "exclusion": None,
+    "ext": None,
+    "limit": None,
+}
+
+
 def unique_filename(path):
     i = 0
     base, ext = os.path.splitext(path)
@@ -14,7 +24,7 @@ def unique_filename(path):
     return path
 
 
-def ls_files(dir, recursive=True, absolute=True, inclusion=None, exclusion=None, ext=None, limit=None):
+def ls_files(dir, **traversal_opts):
     q = Queue()
 
     if absolute:
@@ -46,3 +56,7 @@ def ls_files(dir, recursive=True, absolute=True, inclusion=None, exclusion=None,
                     break
 
             yield entry
+
+
+def transform_snake_case(path: str):
+    return '_'.join(path.name.split()).replace('&', "and").replace('-', '_').lower()
