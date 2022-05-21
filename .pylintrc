@@ -1,0 +1,10 @@
+[MESSAGES CONTROL]
+    disable=
+    unused-argument,
+    too-many-arguments,
+    wrong-import-order,
+    missing-module-docstring,
+    missing-class-docstring,
+    missing-function-docstring,
+    invalid-name,
+    logging-fstring-interpolation
