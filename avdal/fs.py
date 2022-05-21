@@ -45,4 +45,4 @@ def ls_files(dir, recursive=True, absolute=True, inclusion=None, exclusion=None,
                 if limit < 0:
                     break
 
-            yield entry.path
+            yield entry
