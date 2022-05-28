@@ -63,3 +63,19 @@ def ls_files(dir, **kwargs):
 
 def transform_snake_case(path: str):
     return '_'.join(path.split()).replace('&', "and").replace('-', '_').lower()
+
+
+def rename_files(dir, func, noop=False, **kwargs):
+    for entry in ls_files(dir, **kwargs):
+        parent, _ = os.path.split(entry.path)
+        target = os.path.join(parent, func(entry.name))
+
+        if noop:
+            print(f"{entry.path} -> {target}")
+            continue
+
+        if os.path.exists(target):
+            target = unique_filename(target)
+
+        if entry.path != target:
+            os.rename(entry.path, target)
