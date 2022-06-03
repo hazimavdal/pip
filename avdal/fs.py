@@ -1,7 +1,7 @@
 import os
 import re
 from queue import Queue
-
+from typing import Iterator
 
 class TraversalOptions:
     def __init__(self, **kwargs):
@@ -25,7 +25,7 @@ def unique_filename(path):
     return path
 
 
-def ls_files(dir, **kwargs):
+def ls_files(dir, **kwargs) -> Iterator[os.DirEntry]:
     opts = TraversalOptions(**kwargs)
     q = Queue()
 
