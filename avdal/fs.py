@@ -3,10 +3,11 @@ import re
 from queue import Queue
 from typing import Iterator
 
+
 class TraversalOptions:
     def __init__(self, **kwargs):
         self.recursive = kwargs.get("recursive", False)
-        self.absolute = kwargs.get("absolute", False)
+        self.relative = kwargs.get("relative", False)
         self.inclusion = kwargs.get("inclusion", None)
         self.exclusion = kwargs.get("exclusion", None)
         self.folder_exclusion = kwargs.get("folder_exclusion", [])
@@ -25,14 +26,16 @@ def unique_filename(path):
     return path
 
 
-def ls_files(dir, **kwargs) -> Iterator[os.DirEntry]:
+def ls_files(folder, **kwargs) -> Iterator[os.DirEntry]:
     opts = TraversalOptions(**kwargs)
     q = Queue()
 
-    if opts.absolute:
-        dir = os.path.abspath(dir)
+    if not opts.relative:
+        folder = os.path.expanduser(folder)
+        folder = os.path.expandvars(folder)
+        folder = os.path.realpath(folder)
 
-    q.put(dir)
+    q.put(folder)
 
     while not q.empty() and (opts.limit is None or opts.limit > 0):
         for entry in os.scandir(q.get()):
