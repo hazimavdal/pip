@@ -69,6 +69,13 @@ def transform_snake_case(path: str):
     return '_'.join(path.split()).replace('&', "and").replace('-', '_').lower()
 
 
+def transform_with_regex(pattern, repl):
+    def transform(path):
+        return re.sub(pattern, repl, path)
+
+    return transform
+
+
 def rename_files(dir, func, noop=False, **kwargs):
     for entry in ls_files(dir, **kwargs):
         parent, _ = os.path.split(entry.path)
