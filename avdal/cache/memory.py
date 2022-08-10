@@ -38,7 +38,6 @@ class MemoryCache(Cache):
         self.lock.release()
 
     def incr(self, key, amount=1):
-        now = int(time.time())
         self.lock.acquire()
 
         if key in self.cache:
