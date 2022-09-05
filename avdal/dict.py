@@ -10,7 +10,7 @@ class AttrDict(dict):
             if type(v) is dict:
                 self[k] = AttrDict(v)
             elif type(v) is list:
-                self[k] = [AttrDict(vv) for vv in v]
+                self[k] = [AttrDict(vv) for vv in v if type(vv) in (list, dict)]
 
     def __getattr__(self, name):
         try:
@@ -31,3 +31,8 @@ class AttrDict(dict):
                 d[k] = v
 
         return d
+
+
+AttrDict({
+    "location": ["**/.git", "._*"]
+})
