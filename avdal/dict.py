@@ -19,3 +19,13 @@ class AttrDict(dict):
     def from_file(filename):
         with open(filename, "r") as f:
             return AttrDict(json.load(f))
+
+    def dict(self):
+        d = {}
+        for k, v in self.items():
+            if type(v) is AttrDict:
+                d[k] = v.dict()
+            else:
+                d[k] = v
+
+        return d
