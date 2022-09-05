@@ -27,6 +27,8 @@ class AttrDict(dict):
         for k, v in self.items():
             if type(v) is AttrDict:
                 d[k] = v.dict()
+            elif type(v) is list:
+                d[k] = [vv.dict() for vv in v if type(vv) is AttrDict]
             else:
                 d[k] = v
 
