@@ -10,7 +10,7 @@ class AttrDict(dict):
             if type(obj) is list:
                 return [to_attrdict(v) for v in obj]
             elif type(obj) is dict:
-                return AttrDict({k: to_attrdict(v) for v in obj})
+                return AttrDict({k: to_attrdict(v) for k, v in obj.items()})
             return obj
 
         for k, v in self.items():
@@ -29,7 +29,7 @@ class AttrDict(dict):
     def dict(self):
         def to_dict(obj):
             if type(obj) is AttrDict:
-                return v.dict()
+                return obj.dict()
             elif type(obj) is list:
                 return [to_dict(v) for v in obj]
 
