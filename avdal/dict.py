@@ -28,7 +28,7 @@ class AttrDict(dict):
             if type(v) is AttrDict:
                 d[k] = v.dict()
             elif type(v) is list:
-                d[k] = [vv.dict() if type(vv) is AttrDict else vv for vv in v]
+                d[k] = [(vv.dict() if type(vv) is AttrDict else vv) for vv in v]
             else:
                 d[k] = v
 
