@@ -6,11 +6,15 @@ class AttrDict(dict):
         super(AttrDict, self).__init__(*args, **kwargs)
         self.__dict__ = self
 
+        def to_attrdict(obj):
+            if type(obj) is list:
+                return [to_attrdict(v) for v in obj]
+            elif type(obj) is dict:
+                return AttrDict({k: to_attrdict(v) for v in obj})
+            return obj
+
         for k, v in self.items():
-            if type(v) is dict:
-                self[k] = AttrDict(v)
-            elif type(v) is list:
-                self[k] = [AttrDict(vv) for vv in v if type(vv) in (list, dict)]
+            self[k] = to_attrdict(v)
 
     def __getattr__(self, name):
         try:
@@ -23,18 +27,16 @@ class AttrDict(dict):
             return AttrDict(json.load(f))
 
     def dict(self):
+        def to_dict(obj):
+            if type(obj) is AttrDict:
+                return v.dict()
+            elif type(obj) is list:
+                return [to_dict(v) for v in obj]
+
+            return obj
+
         d = {}
         for k, v in self.items():
-            if type(v) is AttrDict:
-                d[k] = v.dict()
-            elif type(v) is list:
-                d[k] = [(vv.dict() if type(vv) is AttrDict else vv) for vv in v]
-            else:
-                d[k] = v
+            d[k] = to_dict(v)
 
         return d
-
-
-AttrDict({
-    "location": ["**/.git", "._*"]
-})
