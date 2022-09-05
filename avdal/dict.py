@@ -9,6 +9,8 @@ class AttrDict(dict):
         for k, v in self.items():
             if type(v) is dict:
                 self[k] = AttrDict(v)
+            elif type(v) is list:
+                self[k] = [AttrDict(vv) for vv in v]
 
     def __getattr__(self, name):
         try:
