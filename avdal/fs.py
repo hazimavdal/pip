@@ -10,7 +10,7 @@ class TraversalOptions:
         self.relative = kwargs.get("relative", False)
         self.inclusion = kwargs.get("inclusion", None)
         self.exclusion = kwargs.get("exclusion", None)
-        self.ignore_folders = kwargs.get("ignore_folders", [])
+        self.ignore_folders = [os.path.realpath(p) for p in kwargs.get("ignore_folders", [])]
         self.ext = kwargs.get("ext", None)
         self.limit = kwargs.get("limit", None)
 
@@ -41,7 +41,9 @@ def ls_files(folder, **kwargs) -> Iterator[os.DirEntry]:
         for entry in os.scandir(q.get()):
             if opts.recursive and entry.is_dir(follow_symlinks=False):
                 _, folder = os.path.split(entry.path)
-                if folder.strip(os.sep) not in opts.ignore_folders:
+                folder = os.path.realpath(folder)
+                if folder not in opts.ignore_folders:
+                    print(folder)
                     q.put(entry.path)
                 continue
 
