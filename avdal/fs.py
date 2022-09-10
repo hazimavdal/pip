@@ -43,7 +43,6 @@ def ls_files(folder, **kwargs) -> Iterator[os.DirEntry]:
                 _, folder = os.path.split(entry.path)
                 folder = os.path.realpath(folder)
                 if folder not in opts.ignore_folders:
-                    print(folder)
                     q.put(entry.path)
                 continue
 
