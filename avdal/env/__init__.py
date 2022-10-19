@@ -31,7 +31,7 @@ class Environment(MutableMapping):
         self.prefix = prefix
         self.prefixf = lambda x: x if not prefix else f"{prefix}_{x}"
 
-    def _expand(self, value):
+    def expand_variables(self, value):
         if type(value) is not str:
             return value
 
@@ -72,7 +72,7 @@ class Environment(MutableMapping):
         return self.get(key, default, nullable, cast)
 
     def __setitem__(self, key, value):
-        self._data[key] = self._expand(value)
+        self._data[key] = self.expand_variables(value)
 
     def __getitem__(self, key):
         return self._data[key]
