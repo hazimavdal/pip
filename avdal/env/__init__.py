@@ -64,7 +64,8 @@ class Environment(MutableMapping):
             return mapper(value)
 
         if default is None and not nullable:
-            raise Exception(f"{key} not found. Declare it as environment variable or provide a default value.")
+            raise KeyError(key)
+            # raise Exception(f"{key} not found. Declare it as environment variable or provide a default value.")
 
         return mapper(default)
 
