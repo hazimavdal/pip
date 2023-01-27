@@ -66,6 +66,13 @@ def ls_files(folder, **kwargs) -> Iterator[os.DirEntry]:
             yield entry
 
 
+def transform_add_suffix(suffix: str):
+    def transform(path):
+        return f"{path}{suffix}"
+
+    return transform
+
+
 def transform_snake_case(path: str):
     return '_'.join(path.split()).replace('&', "and").replace('-', '_').lower()
 
