@@ -136,3 +136,13 @@ def enrich_environ(*env_files, **kwargs):
     for key, value in DotEnv(*env_files, **kwargs).items():
         if key not in os.environ:
             os.environ[key] = value
+
+
+def path_mapper(path: str) -> str:
+    path = os.path.expandvars(path)
+    path = os.path.expanduser(path)
+    path = os.path.abspath(path)
+    path = os.path.realpath(path, strict=True)
+    path = os.path.normpath(path)
+
+    return path
