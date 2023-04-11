@@ -139,8 +139,8 @@ def enrich_environ(*env_files, **kwargs):
 
 
 def path_mapper(path: str) -> str:
-    path = os.path.expandvars(path)
     path = os.path.expanduser(path)
+    path = os.path.expandvars(path)
     path = os.path.abspath(path)
     path = os.path.realpath(path, strict=True)
     path = os.path.normpath(path)
