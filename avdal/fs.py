@@ -95,8 +95,8 @@ def _transform_exif_date(entry: os.DirEntry, field_id: int):
         field = Image.open(entry.path)._getexif()[field_id]
         sig = datetime.strptime(field, "%Y:%m:%d %H:%M:%S").strftime("%Y%m%d%H%M%S")
         return os.path.join(parent, sig + ext)
-    except Exception as e:
-        return None
+    except Exception as _:
+        return entry.path
 
 
 def transform_exif_created_timestamp(entry: os.DirEntry):
