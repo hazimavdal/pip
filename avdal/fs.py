@@ -1,5 +1,7 @@
 import os
 import re
+from datetime import datetime
+from PIL import Image
 from queue import Queue
 from typing import Iterator
 
@@ -69,27 +71,45 @@ def ls_files(folder, **kwargs) -> Iterator[os.DirEntry]:
 
 
 def transform_add_suffix(suffix: str):
-    def transform(path):
-        return f"{path}{suffix}"
+    def transform(entry: os.DirEntry):
+        return entry.path + suffix
 
     return transform
 
 
-def transform_snake_case(path: str):
-    return "_".join(path.split()).replace("&", "and").replace("-", "_").lower()
+def transform_snake_case(entry: os.DirEntry):
+    return "_".join(entry.path.split()).replace("&", "and").replace("-", "_").lower()
 
 
 def transform_with_regex(pattern, repl):
-    def transform(path):
-        return re.sub(pattern, repl, path)
+    def transform(entry: os.DirEntry):
+        return re.sub(pattern, repl, entry.path)
 
     return transform
+
+
+def _transform_exif_date(entry: os.DirEntry, field_id: int):
+    try:
+        parent, _ = os.path.split(entry)
+        _, ext = os.path.splitext(entry)
+        field = Image.open(entry.path)._getexif()[field_id]
+        sig = datetime.strptime(field, "%Y:%m:%d %H:%M:%S").strftime("%Y%m%d%H%M%S")
+        return os.path.join(parent, sig + ext)
+    except Exception as e:
+        return None
+
+
+def transform_exif_created_timestamp(entry: os.DirEntry):
+    return _transform_exif_date(entry, 36867)
+
+
+def transform_exif_modified_timestamp(entry: os.DirEntry):
+    return _transform_exif_date(entry, 306)
 
 
 def rename_files(dir, func, noop=False, **kwargs):
     for entry in ls_files(dir, **kwargs):
-        parent, _ = os.path.split(entry.path)
-        target = os.path.join(parent, func(entry.name))
+        target = func(entry)
 
         if noop:
             print(f"{entry.path} -> {target}")
