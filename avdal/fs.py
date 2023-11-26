@@ -10,7 +10,9 @@ class TraversalOptions:
         self.relative = kwargs.get("relative", False)
         self.inclusion = kwargs.get("inclusion", None)
         self.exclusion = kwargs.get("exclusion", None)
-        self.ignore_folders = [os.path.realpath(p) for p in kwargs.get("ignore_folders", [])]
+        self.ignore_folders = [
+            os.path.realpath(p) for p in kwargs.get("ignore_folders", [])
+        ]
         self.ext = kwargs.get("ext", None)
         self.limit = kwargs.get("limit", None)
 
@@ -20,7 +22,7 @@ def unique_filename(path):
     base, ext = os.path.splitext(path)
 
     while os.path.exists(path):
-        path = f'{base}_c{i}{ext}'
+        path = f"{base}_c{i}{ext}"
         i += 1
 
     return path
@@ -74,7 +76,7 @@ def transform_add_suffix(suffix: str):
 
 
 def transform_snake_case(path: str):
-    return '_'.join(path.split()).replace('&', "and").replace('-', '_').lower()
+    return "_".join(path.split()).replace("&", "and").replace("-", "_").lower()
 
 
 def transform_with_regex(pattern, repl):
