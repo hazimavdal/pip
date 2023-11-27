@@ -4,7 +4,7 @@ from avdal import annotations
 from avdal import rbac
 from avdal.env import DotEnv
 from avdal.dict import AttrDict
-from avdal.aql import match_object
+from avdal.aql import Filter
 
 
 def fails(f, *args, **kwargs):
@@ -142,5 +142,6 @@ class TestQF(unittest.TestCase):
         ]
 
         for obj, q, should_match in tests:
-            actual = match_object(obj, q, debug=True)
+            filter = Filter(q)
+            actual = filter.match(obj, debug=True)
             self.assertEqual(should_match, actual)

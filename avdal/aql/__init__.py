@@ -1,4 +1,5 @@
 import operator
+import json, sys
 from lark import Lark
 from lark import Transformer
 from datetime import datetime
@@ -36,7 +37,7 @@ DATE.1: /\d{4}-\d{2}-\d{2}/
 )
 
 
-class __visitor(Transformer):
+class _visitor(Transformer):
     def __init__(self, visit_tokens: bool = True) -> None:
         super().__init__(visit_tokens)
 
@@ -110,7 +111,7 @@ class __visitor(Transformer):
         return children[0]
 
 
-def __eval_exp(obj, exp) -> bool:
+def _eval_exp(obj, exp) -> bool:
     op = exp["op"]
     field = exp.get("field")
     expected_value = exp.get("value", {}).get("value")
@@ -127,9 +128,9 @@ def __eval_exp(obj, exp) -> bool:
     }
 
     if op == ",":
-        return __eval_exp(obj, exp["arg1"]) or __eval_exp(obj, exp["arg2"])
+        return _eval_exp(obj, exp["arg1"]) or _eval_exp(obj, exp["arg2"])
     elif op == "+":
-        return __eval_exp(obj, exp["arg1"]) and __eval_exp(obj, exp["arg2"])
+        return _eval_exp(obj, exp["arg1"]) and _eval_exp(obj, exp["arg2"])
     elif op in cmp_ops:
         actual_value = obj.get(field)
 
@@ -145,11 +146,13 @@ def __eval_exp(obj, exp) -> bool:
         raise Exception(f"{op}: unknown operation")
 
 
-def match_object(obj, query, debug=False):
-    tree = parser.parse(query)
-    exp = __visitor(visit_tokens=True).transform(tree)
-    if debug:
-        import json, sys
+class Filter:
+    def __init__(self, query):
+        tree = parser.parse(query)
+        self.exp = _visitor(visit_tokens=True).transform(tree)
 
-        json.dump(exp, sys.stdout, indent=4, default=str)
-    return __eval_exp(obj, exp)
+    def match(self, obj, debug=False) -> bool:
+        if debug:
+            json.dump(self.exp, sys.stdout, indent=4, default=str)
+
+        return _eval_exp(obj, self.exp)
