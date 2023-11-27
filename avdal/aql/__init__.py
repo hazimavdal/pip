@@ -25,7 +25,7 @@ floats: SIGNED_FLOAT | SIGNED_FLOAT WS? "," WS? floats
 
 BIN_OP: "," | "+"                                    
 ATOMIC_OP: "=" | "!=" | "<" | ">" | "<=" | ">="     
-STRING_OP: "=" | "!=" | "~!=" | "~=" | "*=" | "=*" | "%"   
+STRING_OP: "=" | "!=" | "!~" | "~" | "*=" | "=*" | "%"   
 LIST_OP: "!=" | "=" | "~" | "!~"                    
 NULL_OP: "!=" | "="                                 
 STRING: /'[^']*'/                                   
@@ -122,9 +122,9 @@ def _eval_exp(obj, exp) -> bool:
 
     cmp_ops = {
         "=": operator.eq,
-        "~=": lambda a, b: a.lower() == b.lower(),
+        "~": lambda a, b: a.lower() == b.lower(),
         "!=": operator.ne,
-        "~!=": lambda a, b: a.lower() != b.lower(),
+        "!~": lambda a, b: a.lower() != b.lower(),
         "*=": lambda a, b: a.startswith(b),
         "=*": lambda a, b: a.endswith(b),
         "%": lambda a, b: re.match(b, a) is not None,
