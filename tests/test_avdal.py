@@ -134,6 +134,8 @@ class TestQF(unittest.TestCase):
             (obj1, "key1 ~ ['a'] + key1 !~ ['a']", False),
             (obj1, "key1 ~ ['a'] , key1 !~ ['a']", True),
             (obj1, "k1 = 1", False),
+            (obj1, "k1='1'", True),
+            (obj1, "symbol='aaaaaaa'", False),
             (obj1, "(k1 = 1),(k2 = 2+k3 < 100)", True),
             (obj1, "(k2 > -2)", True),
             (obj1, "(k3 > -2)", True),

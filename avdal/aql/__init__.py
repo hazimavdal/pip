@@ -25,7 +25,7 @@ BIN_OP: "," | "+"
 ATOMIC_OP: "=" | "!=" | "<" | ">" | "<=" | ">="     
 LIST_OP: "!=" | "=" | "~" | "!~"                    
 NULL_OP: "!=" | "="                                 
-STRING: /'[^']'*/                                   
+STRING: /'[^']*'/                                   
 DATE.1: /\d{4}-\d{2}-\d{2}/
 
 %import common.SIGNED_INT
