@@ -127,13 +127,13 @@ class TestQF(unittest.TestCase):
         tests = [
             (
                 obj1,
-                "k1 = '1' + k2 = 2 + k3 = 2.3 + k4 > '2023-11-30' + k4 < '2024-01-01' + k1 ~ ['1', '2'] + k3 > 1.0 + k5 = null + k4 != null",
+                "k1 = '1' + k2 = 2 + k3 = 2.3 + k4 > '2023-11-30' + k4 < '2024-01-01' + k1 in ['1', '2'] + k3 > 1.0 + k5 = null + k4 != null",
                 True,
             ),
-            (obj1, "key1 !~ ['a']", True),
-            (obj1, "key1 ~ ['a']", False),
-            (obj1, "key1 ~ ['a'] + key1 !~ ['a']", False),
-            (obj1, "key1 ~ ['a'] , key1 !~ ['a']", True),
+            (obj1, "key1 not_in ['a']", True),
+            (obj1, "key1 in ['a']", False),
+            (obj1, "key1 in ['a'] + key1 not_in ['a']", False),
+            (obj1, "key1 in ['a'] , key1 not_in ['a']", True),
             (obj1, "k1 = 1", False),
             (obj1, "k1='1'", True),
             (obj1, "symbol='aaaaaaa'", False),
@@ -142,11 +142,11 @@ class TestQF(unittest.TestCase):
             (obj1, "(k3 > -2)", True),
             (obj1, "(k0 = [1, 2, 3])", True),
             (obj1, "(k0 != [1.1, 2.0, 3.0])", True),
-            (obj2, "key1 _= 'abcdefg'", True),
-            (obj2, "key1 _= 'AbCDefg'", True),
+            (obj2, "key1 ~ 'abcdefg'", True),
+            (obj2, "key1 ~ 'AbCDefg'", True),
             (obj2, "key1 = 'abcdefg'", True),
-            (obj2, "key1 _= 'abcdefg '", False),
-            (obj2, "key1 _!= 'abcdefg '", True),
+            (obj2, "key1 ~ 'abcdefg '", False),
+            (obj2, "key1 !~ 'abcdefg '", True),
         ]
 
         for obj, q, should_match in tests:

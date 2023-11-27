@@ -25,8 +25,8 @@ floats: SIGNED_FLOAT | SIGNED_FLOAT WS? "," WS? floats
 
 BIN_OP: "," | "+"                                    
 ATOMIC_OP: "=" | "!=" | "<" | ">" | "<=" | ">="     
-STRING_OP: "=" | "!=" | "_=" | "_!=" | "~" | "*=" | "=*" | "%"   
-LIST_OP: "!=" | "=" | "~" | "!~"                    
+STRING_OP: "=" | "!=" | "~" | "!~" | "~" | "*=" | "=*" | "%"   
+LIST_OP: "!=" | "=" | "in" | "not_in"                    
 NULL_OP: "!=" | "="                                 
 STRING: /'[^']*'/                                   
 DATE.1: /\d{4}-\d{2}-\d{2}/
@@ -122,9 +122,9 @@ def _eval_exp(obj, exp) -> bool:
 
     cmp_ops = {
         "=": operator.eq,
-        "_=": lambda a, b: a.lower() == b.lower(),
+        "~": lambda a, b: a.lower() == b.lower(),
         "!=": operator.ne,
-        "_!=": lambda a, b: a.lower() != b.lower(),
+        "!~": lambda a, b: a.lower() != b.lower(),
         "*=": lambda a, b: a.startswith(b),
         "=*": lambda a, b: a.endswith(b),
         "%": lambda a, b: re.match(b, a) is not None,
@@ -132,8 +132,8 @@ def _eval_exp(obj, exp) -> bool:
         ">=": operator.ge,
         "<": operator.lt,
         "<=": operator.le,
-        "~": lambda a, b: a in b,
-        "!~": lambda a, b: a not in b,
+        "in": lambda a, b: a in b,
+        "not_in": lambda a, b: a not in b,
     }
 
     if op == ",":
