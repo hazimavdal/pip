@@ -148,11 +148,17 @@ def _eval_exp(obj, exp) -> bool:
 
 class Filter:
     def __init__(self, query):
+        if not query:
+            self.exp = None
+            return
         tree = parser.parse(query)
         self.exp = _visitor(visit_tokens=True).transform(tree)
 
     def match(self, obj, debug=False) -> bool:
         if debug:
             json.dump(self.exp, sys.stdout, indent=4, default=str)
+
+        if self.exp is None:
+            return True
 
         return _eval_exp(obj, self.exp)
