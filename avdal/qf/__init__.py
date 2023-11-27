@@ -43,9 +43,28 @@ class __visitor(Transformer):
         def get_val(token):
             return token.value
 
-        self.SIGNED_INT = int
-        self.SIGNED_FLOAT = float
-        self.STRING = lambda raw: raw[1:-1]
+        def get_typed_val(token):
+            if token.type == "SIGNED_INT":
+                return {"type": int, "value": int(token.value)}
+            if token.type == "SIGNED_FLOAT":
+                return {"type": float, "value": float(token.value)}
+
+            if token.type == "STRING":
+                return {"type": str, "value": token.value[1:-1]}
+
+            if token.type == "DATE":
+                return {
+                    "type": datetime,
+                    "value": datetime.strptime(token.value, "%Y-%m-%d"),
+                }
+
+            raise Exception(f"{token.type}: unknown token type")
+
+        self.SIGNED_INT = get_typed_val
+        self.SIGNED_FLOAT = get_typed_val
+        self.STRING = get_typed_val
+        self.DATE = get_typed_val
+
         self.BIN_OP = get_val
         self.LIST_OP = get_val
         self.ATOMIC_OP = get_val
@@ -55,9 +74,6 @@ class __visitor(Transformer):
     def WS(self, _):
         return Discard
 
-    def DATE(self, token):
-        return datetime.strptime(token.value, "%Y-%m-%d")
-
     def atom(self, children):
         return children[0]
 
@@ -65,11 +81,11 @@ class __visitor(Transformer):
         result = []
         cur = children[0]
         while len(cur.children) > 0:
-            result.append(cur.children[0])
+            result.append(cur.children[0]["value"])
             if len(cur.children) == 1:
                 break
             cur = cur.children[1]
-        return result
+        return {"type": list, "value": result}
 
     def exp_compare(self, children):
         return {
@@ -95,7 +111,8 @@ class __visitor(Transformer):
 def __eval_exp(obj, exp) -> bool:
     op = exp["op"]
     field = exp.get("field")
-    expected_value = exp.get("value")
+    expected_value = exp.get("value", {}).get("value")
+    expected_type = exp.get("value", {}).get("type")
 
     cmp_ops = {
         "=": operator.eq,
@@ -104,7 +121,8 @@ def __eval_exp(obj, exp) -> bool:
         ">=": operator.ge,
         "<": operator.lt,
         "<=": operator.le,
-        "~": operator.contains,
+        "~": lambda a, b: a in b,
+        "!~": lambda a, b: a not in b,
     }
 
     if op == ",":
@@ -114,12 +132,14 @@ def __eval_exp(obj, exp) -> bool:
     elif op in cmp_ops:
         actual_value = obj.get(field)
 
-        if expected_value is not None and type(expected_value) != type(actual_value):
-            return False
+        if expected_value is not None:
+            try:
+                actual_value = datetime.strptime(actual_value, "%Y-%m-%d")
+            except:
+                pass
 
-        return cmp_ops[op](
-            expected_value, actual_value
-        )  # order is important because of "in"
+        # order is important because of "in"
+        return cmp_ops[op](actual_value, expected_value)
     else:
         raise Exception(f"{op}: unknown operation")
 
