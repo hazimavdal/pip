@@ -91,7 +91,9 @@ class __visitor(Transformer):
         return {
             "field": children[0],
             "op": children[1],
-            "value": None if len(children) < 3 else children[2],
+            "value": {"type": type(None), "value": None}
+            if len(children) < 3
+            else children[2],
         }
 
     def exp_group(self, children):
@@ -112,7 +114,6 @@ def __eval_exp(obj, exp) -> bool:
     op = exp["op"]
     field = exp.get("field")
     expected_value = exp.get("value", {}).get("value")
-    expected_type = exp.get("value", {}).get("type")
 
     cmp_ops = {
         "=": operator.eq,
