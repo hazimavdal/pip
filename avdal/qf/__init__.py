@@ -124,7 +124,11 @@ def __eval_exp(obj, exp) -> bool:
         raise Exception(f"{op}: unknown operation")
 
 
-def match_object(obj, query):
+def match_object(obj, query, debug=False):
     tree = parser.parse(query)
     exp = __visitor(visit_tokens=True).transform(tree)
+    if debug:
+        import json, sys
+
+        json.dump(exp, sys.stdout, indent=4, default=str)
     return __eval_exp(obj, exp)
