@@ -1,3 +1,4 @@
+import re
 import operator
 import json, sys
 from lark import Lark
@@ -10,12 +11,13 @@ parser = Lark(
 start: exp
 
 exp: CNAME WS? ATOMIC_OP WS? atom                 -> exp_compare
+   | CNAME WS? STRING_OP WS? STRING               -> exp_compare
    | CNAME WS? LIST_OP WS? "[" atoms "]"          -> exp_compare
    | CNAME WS? NULL_OP WS? "null"                 -> exp_compare
    | "(" WS? exp WS? ")"                          -> exp_group 
    | exp WS? BIN_OP WS? exp                       -> exp_binop  
 
-atom: STRING | SIGNED_INT | SIGNED_FLOAT | "'" DATE "'"
+atom: SIGNED_INT | SIGNED_FLOAT | "'" DATE "'"
 atoms: ints | strings | floats 
 ints: SIGNED_INT | SIGNED_INT WS? "," WS? ints            
 strings: STRING | STRING WS? "," WS? strings                
@@ -23,6 +25,7 @@ floats: SIGNED_FLOAT | SIGNED_FLOAT WS? "," WS? floats
 
 BIN_OP: "," | "+"                                    
 ATOMIC_OP: "=" | "!=" | "<" | ">" | "<=" | ">="     
+STRING_OP: "=" | "!=" | "~!=" | "~=" | "*=" | "=*" | "%"   
 LIST_OP: "!=" | "=" | "~" | "!~"                    
 NULL_OP: "!=" | "="                                 
 STRING: /'[^']*'/                                   
@@ -69,6 +72,7 @@ class _visitor(Transformer):
         self.BIN_OP = get_val
         self.LIST_OP = get_val
         self.ATOMIC_OP = get_val
+        self.STRING_OP = get_val
         self.NULL_OP = get_val
         self.CNAME = get_val
 
@@ -118,7 +122,12 @@ def _eval_exp(obj, exp) -> bool:
 
     cmp_ops = {
         "=": operator.eq,
+        "~=": lambda a, b: a.lower() == b.lower(),
         "!=": operator.ne,
+        "~!=": lambda a, b: a.lower() != b.lower(),
+        "*=": lambda a, b: a.startswith(b),
+        "=*": lambda a, b: a.endswith(b),
+        "%": lambda a, b: re.match(b, a) is not None,
         ">": operator.gt,
         ">=": operator.ge,
         "<": operator.lt,
@@ -147,11 +156,11 @@ def _eval_exp(obj, exp) -> bool:
 
 
 class Filter:
-    def __init__(self, query):
-        if not query:
+    def __init__(self, filter_str):
+        if not filter_str:
             self.exp = None
             return
-        tree = parser.parse(query)
+        tree = parser.parse(filter_str)
         self.exp = _visitor(visit_tokens=True).transform(tree)
 
     def match(self, obj, debug=False) -> bool:
