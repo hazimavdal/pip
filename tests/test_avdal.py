@@ -4,6 +4,7 @@ from avdal import annotations
 from avdal import rbac
 from avdal.env import DotEnv
 from avdal.dict import AttrDict
+from avdal.qf import match_object
 
 
 def fails(f, *args, **kwargs):
@@ -16,7 +17,6 @@ def fails(f, *args, **kwargs):
 
 class TestTyping(unittest.TestCase):
     def test_enforce_static_annotations(self):
-
         @annotations.enforce_types
         def f1(a: str, b: int):
             pass
@@ -106,10 +106,41 @@ class TestEnv(unittest.TestCase):
 
         for var, v in expects.items():
             if v.get("masked"):
-                assert env.get(var, nullable=True) is None, f"{var}: unexpected environment variable"
+                assert (
+                    env.get(var, nullable=True) is None
+                ), f"{var}: unexpected environment variable"
                 continue
 
             cast = eval(getattr(v, "cast", "str"))
             actual = env.get(var, mapper=cast)
 
-            assert cast(actual) == v.value, f"{var}: expected [{v.value}], got [{actual}]"
+            assert (
+                cast(actual) == v.value
+            ), f"{var}: expected [{v.value}], got [{actual}]"
+
+
+class TestQF(unittest.TestCase):
+    def test_match_object(self):
+        obj1 = {"k0": [1, 2, 3], "k1": "1", "k2": 2, "k3": 2.3, "k4": "2023-12-31"}
+
+        tests = [
+            (
+                obj1,
+                "k1 = '1' + k2 = 2 + k3 = 2.3 + k4 > '2023-11-30' + k4 < '2024-01-01' + k1 ~ ['1', '2'] + k3 > 1.0 + k5 = null + k4 != null",
+                True,
+            ),
+            (obj1, "key1 !~ ['a']", True),
+            (obj1, "key1 ~ ['a']", False),
+            (obj1, "key1 ~ ['a'] + key1 !~ ['a']", False),
+            (obj1, "key1 ~ ['a'] , key1 !~ ['a']", True),
+            (obj1, "k1 = 1", False),
+            (obj1, "(k1 = 1),(k2 = 2+k3 < 100)", True),
+            (obj1, "(k2 > -2)", True),
+            (obj1, "(k3 > -2)", True),
+            (obj1, "(k0 = [1, 2, 3])", True),
+            (obj1, "(k0 != [1.1, 2.0, 3.0])", True),
+        ]
+
+        for obj, q, should_match in tests:
+            actual = match_object(obj, q, debug=True)
+            self.assertEqual(should_match, actual)
