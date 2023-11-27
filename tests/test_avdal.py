@@ -122,6 +122,7 @@ class TestEnv(unittest.TestCase):
 class TestQF(unittest.TestCase):
     def test_match_object(self):
         obj1 = {"k0": [1, 2, 3], "k1": "1", "k2": 2, "k3": 2.3, "k4": "2023-12-31"}
+        obj2 = {"key1": "abcdefg"}
 
         tests = [
             (
@@ -141,9 +142,14 @@ class TestQF(unittest.TestCase):
             (obj1, "(k3 > -2)", True),
             (obj1, "(k0 = [1, 2, 3])", True),
             (obj1, "(k0 != [1.1, 2.0, 3.0])", True),
+            (obj2, "key1 _= 'abcdefg'", True),
+            (obj2, "key1 _= 'AbCDefg'", True),
+            (obj2, "key1 = 'abcdefg'", True),
+            (obj2, "key1 _= 'abcdefg '", False),
+            (obj2, "key1 _!= 'abcdefg '", True),
         ]
 
         for obj, q, should_match in tests:
             filter = Filter(q)
             actual = filter.match(obj, debug=True)
-            self.assertEqual(should_match, actual)
+            self.assertEqual(should_match, actual, msg=f"q={q}")
