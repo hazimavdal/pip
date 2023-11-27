@@ -4,7 +4,7 @@ from avdal import annotations
 from avdal import rbac
 from avdal.env import DotEnv
 from avdal.dict import AttrDict
-from avdal.qf import match_object
+from avdal.aql import match_object
 
 
 def fails(f, *args, **kwargs):
