@@ -125,6 +125,6 @@ def __eval_exp(obj, exp) -> bool:
 
 
 def match_object(obj, query):
-    tree = parser.parse(filter)
+    tree = parser.parse(query)
     exp = __visitor(visit_tokens=True).transform(tree)
     return __eval_exp(obj, exp)
