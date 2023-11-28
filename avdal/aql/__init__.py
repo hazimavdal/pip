@@ -17,7 +17,7 @@ exp: CNAME WS? ATOMIC_OP WS? atom                 -> exp_compare
    | "(" WS? exp WS? ")"                          -> exp_group 
    | exp WS? BIN_OP WS? exp                       -> exp_binop  
 
-atom: SIGNED_INT | SIGNED_FLOAT | "'" DATE "'"
+atom: SIGNED_INT | SIGNED_FLOAT | "d'" DATE "'"
 atoms: ints | strings | floats 
 ints: SIGNED_INT | SIGNED_INT WS? "," WS? ints            
 strings: STRING | STRING WS? "," WS? strings                
@@ -26,8 +26,8 @@ floats: SIGNED_FLOAT | SIGNED_FLOAT WS? "," WS? floats
 BIN_OP: "," | "+"                                    
 ATOMIC_OP: "=" | "!=" | "<" | ">" | "<=" | ">="     
 STRING_OP: "=" | "!=" | "~" | "!~" | "~" | "*=" | "=*" | "%"   
-LIST_OP: "!=" | "=" | "in" | "not_in"                    
-NULL_OP: "!=" | "="                                 
+LIST_OP: "in" | "not_in"                    
+NULL_OP: "is" | "is_not"                                 
 STRING: /'[^']*'/                                   
 DATE.1: /\d{4}-\d{2}-\d{2}/
 
@@ -119,6 +119,7 @@ def _eval_exp(obj, exp) -> bool:
     op = exp["op"]
     field = exp.get("field")
     expected_value = exp.get("value", {}).get("value")
+    expected_type = exp.get("value", {}).get("type")
 
     cmp_ops = {
         "=": operator.eq,
@@ -132,23 +133,34 @@ def _eval_exp(obj, exp) -> bool:
         ">=": operator.ge,
         "<": operator.lt,
         "<=": operator.le,
-        "in": lambda a, b: a in b,
-        "not_in": lambda a, b: a not in b,
     }
 
     if op == ",":
         return _eval_exp(obj, exp["arg1"]) or _eval_exp(obj, exp["arg2"])
     elif op == "+":
         return _eval_exp(obj, exp["arg1"]) and _eval_exp(obj, exp["arg2"])
+    elif op == "is":
+        return obj.get(field, None) is None
+    elif op == "is_not":
+        return obj.get(field, None) is not None
+    elif op == "in":
+        return field in obj and obj[field] in expected_value
+    elif op == "not_in":
+        return field not in obj or obj[field] not in expected_value
     elif op in cmp_ops:
         actual_value = obj.get(field)
 
-        if expected_value is not None:
-            try:
-                actual_value = datetime.strptime(actual_value, "%Y-%m-%d")
-            except:
-                pass
+        if actual_value is None:
+            return False
 
+        if expected_type is datetime:
+            try:
+                actual_value = datetime.strptime(actual_value[:10], "%Y-%m-%d")
+            except:
+                return False
+        elif type(actual_value) is not expected_type:
+            return False
+        
         # order is important because of "in"
         return cmp_ops[op](actual_value, expected_value)
     else:
