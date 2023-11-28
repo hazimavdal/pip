@@ -1,5 +1,8 @@
 import os
 import re
+import sys
+import json
+import requests
 from datetime import datetime
 from PIL import Image
 from queue import Queue
@@ -120,3 +123,13 @@ def rename_files(dir, func, noop=False, **kwargs):
 
         if entry.path != target:
             os.rename(entry.path, target)
+
+
+def readj(path: str):
+    if path == "-":
+        return json.load(sys.stdin)
+    elif path.startswith("http://") or path.startswith("https://"):
+        return requests.get(path).json()
+    else:
+        with open(path, "r") as f:
+            return json.load()
