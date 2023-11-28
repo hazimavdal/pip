@@ -132,4 +132,4 @@ def readj(path: str):
         return requests.get(path).json()
     else:
         with open(path, "r") as f:
-            return json.load()
+            return json.load(f)
