@@ -10,25 +10,33 @@ parser = Lark(
     """
 start: exp
 
-exp: CNAME WS? ATOMIC_OP WS? atom                 -> exp_compare
-   | CNAME WS? STRING_OP WS? STRING               -> exp_compare
-   | CNAME WS? LIST_OP WS? "[" atoms "]"          -> exp_compare
-   | CNAME WS? NULL_OP WS? "null"                 -> exp_compare
-   | "(" WS? exp WS? ")"                          -> exp_group 
-   | exp WS? BIN_OP WS? exp                       -> exp_binop  
+exp: selector ATOMIC_OP atom                 -> exp_compare
+   | selector STRING_OP STRING               -> exp_compare
+   | selector LIST_OP "[" atoms "]"          -> exp_compare
+   | selector NULL_OP "null"                 -> exp_compare
+   | "(" exp ")"                             -> exp_group 
+   | exp BIN_OP exp                          -> exp_binop
 
 atom: SIGNED_INT | SIGNED_FLOAT | "d'" DATE "'"
 atoms: ints | strings | floats 
-ints: SIGNED_INT | SIGNED_INT WS? "," WS? ints            
-strings: STRING | STRING WS? "," WS? strings                
-floats: SIGNED_FLOAT | SIGNED_FLOAT WS? "," WS? floats      
+ints: SIGNED_INT                            -> list_head
+    | SIGNED_INT "," ints                   -> list_cons
+strings: STRING                             -> list_head
+    | STRING "," strings                    -> list_cons
+floats: SIGNED_FLOAT                        -> list_head
+    | SIGNED_FLOAT "," floats               -> list_cons
+
+selector: key                               -> list_head
+    | key "." selector                      -> list_cons
+key: CNAME | NON_EMPTY_STRING
 
 BIN_OP: "," | "+"                                    
 ATOMIC_OP: "=" | "!=" | "<" | ">" | "<=" | ">="     
 STRING_OP: "=" | "!=" | "~" | "!~" | "~" | "*=" | "=*" | "%"   
 LIST_OP: "in" | "not_in"                    
 NULL_OP: "is" | "is_not"                                 
-STRING: /'[^']*'/                                   
+STRING: /'[^']*'/ 
+NON_EMPTY_STRING: /'[^']+'/                                   
 DATE.1: /\d{4}-\d{2}-\d{2}/
 
 %import common.SIGNED_INT
@@ -49,24 +57,20 @@ class _visitor(Transformer):
 
         def get_typed_val(token):
             if token.type == "SIGNED_INT":
-                return {"type": int, "value": int(token.value)}
+                return int(token.value)
             if token.type == "SIGNED_FLOAT":
-                return {"type": float, "value": float(token.value)}
-
-            if token.type == "STRING":
-                return {"type": str, "value": token.value[1:-1]}
-
+                return float(token.value)
+            if token.type in ["STRING", "NON_EMPTY_STRING"]:
+                return token.value[1:-1]
             if token.type == "DATE":
-                return {
-                    "type": datetime,
-                    "value": datetime.strptime(token.value, "%Y-%m-%d"),
-                }
+                return datetime.strptime(token.value, "%Y-%m-%d")
 
             raise Exception(f"{token.type}: unknown token type")
 
         self.SIGNED_INT = get_typed_val
         self.SIGNED_FLOAT = get_typed_val
         self.STRING = get_typed_val
+        self.NON_EMPTY_STRING = get_typed_val
         self.DATE = get_typed_val
 
         self.BIN_OP = get_val
@@ -75,30 +79,31 @@ class _visitor(Transformer):
         self.STRING_OP = get_val
         self.NULL_OP = get_val
         self.CNAME = get_val
+        self.KEY = get_val
 
     def WS(self, _):
         return Discard
+
+    def key(self, children):
+        return children[0]
+
+    def list_head(self, children):
+        return [children[0]]
+
+    def list_cons(self, children):
+        return [children[0]] + children[1]
 
     def atom(self, children):
         return children[0]
 
     def atoms(self, children):
-        result = []
-        cur = children[0]
-        while len(cur.children) > 0:
-            result.append(cur.children[0]["value"])
-            if len(cur.children) == 1:
-                break
-            cur = cur.children[1]
-        return {"type": list, "value": result}
+        return children[0]
 
     def exp_compare(self, children):
         return {
-            "field": children[0],
+            "selector": children[0],
             "op": children[1],
-            "value": {"type": type(None), "value": None}
-            if len(children) < 3
-            else children[2],
+            "value": None if len(children) < 3 else children[2],
         }
 
     def exp_group(self, children):
@@ -117,9 +122,27 @@ class _visitor(Transformer):
 
 def _eval_exp(obj, exp) -> bool:
     op = exp["op"]
-    field = exp.get("field")
-    expected_value = exp.get("value", {}).get("value")
-    expected_type = exp.get("value", {}).get("type")
+
+    if op == ",":
+        return _eval_exp(obj, exp["arg1"]) or _eval_exp(obj, exp["arg2"])
+    elif op == "+":
+        return _eval_exp(obj, exp["arg1"]) and _eval_exp(obj, exp["arg2"])
+
+    return _eval_cmp(obj, exp)
+
+
+def _eval_cmp(obj, exp) -> bool:
+    op = exp["op"]
+    expected_value = exp.get("value")
+    expected_type = type(expected_value)
+
+    selector = exp.get("selector")
+    for key in selector[:-1]:
+        if key not in obj or type(obj[key]) is not dict:
+            return False
+        obj = obj.get(key)
+
+    field = selector[-1]
 
     cmp_ops = {
         "=": operator.eq,
@@ -135,11 +158,7 @@ def _eval_exp(obj, exp) -> bool:
         "<=": operator.le,
     }
 
-    if op == ",":
-        return _eval_exp(obj, exp["arg1"]) or _eval_exp(obj, exp["arg2"])
-    elif op == "+":
-        return _eval_exp(obj, exp["arg1"]) and _eval_exp(obj, exp["arg2"])
-    elif op == "is":
+    if op == "is":
         return obj.get(field, None) is None
     elif op == "is_not":
         return obj.get(field, None) is not None
@@ -160,7 +179,7 @@ def _eval_exp(obj, exp) -> bool:
                 return False
         elif type(actual_value) is not expected_type:
             return False
-        
+
         # order is important because of "in"
         return cmp_ops[op](actual_value, expected_value)
     else:
