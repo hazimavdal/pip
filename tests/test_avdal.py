@@ -155,9 +155,15 @@ class TestQF(unittest.TestCase):
             ({"a": 3}, "!a=3", False),
             ({"a": 3}, "!a=3.", True),
             ({"a": 3}, "!(a=3+a in [3,4])", False),
+            ({"a": 3}, "* = 3", True),
+            ({"a": 3}, "* not_in [3]", False),
+            ({"a": 3}, "* in [1, 3]", True),
+            ({"a": 3}, "* is_not null", True),
+            ({"a": 3}, "* is null", False),
+            ({"a": {"b": {"c": '1'}}}, "a.b.* = '1'", True),
         ]
 
         for obj, q, should_match in tests:
             filter = Filter(q)
             actual = filter.match(obj, debug=True)
-            self.assertEqual(should_match, actual, msg=f"q={q}")
+            self.assertEqual(should_match, actual, msg=f"q: {q}")

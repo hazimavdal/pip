@@ -27,8 +27,10 @@ strings: STRING                             -> list_head
 floats: SIGNED_FLOAT                        -> list_head
     | SIGNED_FLOAT "," floats               -> list_cons
 
-selector: key                               -> list_head
-    | key "." selector                      -> list_cons
+selector : ANY_KEY | dot_selector | dot_selector "." ANY_KEY
+dot_selector: key                               -> list_head
+    | key "." dot_selector                      -> list_cons
+ANY_KEY: "*"
 key: CNAME | NON_EMPTY_STRING
 
 BIN_OP: "," | "+"                                    
@@ -84,6 +86,15 @@ class _visitor(Transformer):
 
     def WS(self, _):
         return Discard
+
+    def ANY_KEY(self, children):
+        return ["*"]
+
+    def selector(self, children):
+        if len(children) == 1:
+            return children[0]
+
+        return children[0] + children[1]
 
     def key(self, children):
         return children[0]
@@ -169,7 +180,6 @@ def compare(obj, key, op, expected_value):
     elif type(actual_value) is not expected_type:
         return False
 
-    # order is important because of "in"
     return cmp_ops[op](actual_value, expected_value)
 
 
@@ -181,18 +191,36 @@ def _eval_cmp(obj, exp) -> bool:
     for key in selector[:-1]:
         if key not in obj or type(obj[key]) is not dict:
             return False
+        selector = selector[1:]
         obj = obj.get(key)
 
     field = selector[-1]
 
     if op == "is":
+        if selector == ["*"]:
+            return None in obj.values()
         return obj.get(field, None) is None
     elif op == "is_not":
+        if selector == ["*"]:
+            return None not in obj.values()
+
         return obj.get(field, None) is not None
     elif op == "in":
+        if selector == ["*"]:
+            return bool(set(expected_value).intersection(set(obj.values())))
+
         return field in obj and obj[field] in expected_value
     elif op == "not_in":
+        if selector == ["*"]:
+            return not bool(set(expected_value).intersection(set(obj.values())))
+
         return field not in obj or obj[field] not in expected_value
+
+    if selector == ["*"]:
+        for key in obj.keys():
+            if compare(obj, key, op, expected_value):
+                return True
+        return False
 
     return compare(obj, field, op, expected_value)
 
