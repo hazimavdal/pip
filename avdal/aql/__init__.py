@@ -30,7 +30,6 @@ floats: SIGNED_FLOAT                        -> list_head
 selector : ANY_KEY | dot_selector | dot_selector "." ANY_KEY
 dot_selector: key                               -> list_head
     | key "." dot_selector                      -> list_cons
-ANY_KEY: "*"
 key: CNAME | NON_EMPTY_STRING
 
 BIN_OP: "," | "+"                                    
@@ -40,6 +39,7 @@ LIST_OP: "in" | "not_in"
 NULL_OP: "is" | "is_not"                                 
 STRING: /'[^']*'/ 
 NON_EMPTY_STRING: /'[^']+'/                                   
+ANY_KEY: "*"
 DATE.1: /\d{4}-\d{2}-\d{2}/
 
 %import common.SIGNED_INT
