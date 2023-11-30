@@ -32,7 +32,7 @@ dot_selector: key                               -> list_head
     | key "." dot_selector                      -> list_cons
 key: CNAME | NON_EMPTY_STRING
 
-BIN_OP: "," | "+"                                    
+BIN_OP: "|" | "&"                                    
 ATOMIC_OP: "=" | "!=" | "<" | ">" | "<=" | ">="     
 STRING_OP: "=" | "!=" | "~" | "!~" | "~" | "*=" | "=*" | "%"   
 LIST_OP: "in" | "not_in"                    
@@ -141,9 +141,9 @@ class _visitor(Transformer):
 def _eval_exp(obj, exp) -> bool:
     op = exp["op"]
 
-    if op == ",":
+    if op == "|":
         return _eval_exp(obj, exp["arg1"]) or _eval_exp(obj, exp["arg2"])
-    elif op == "+":
+    elif op == "&":
         return _eval_exp(obj, exp["arg1"]) and _eval_exp(obj, exp["arg2"])
     elif op == "!":
         return not _eval_exp(obj, exp["arg1"])
