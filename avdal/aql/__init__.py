@@ -16,6 +16,7 @@ exp: selector ATOMIC_OP atom                 -> exp_compare
    | selector NULL_OP "null"                 -> exp_compare
    | "(" exp ")"                             -> exp_group 
    | exp BIN_OP exp                          -> exp_binop
+   | "!" exp                                 -> exp_not
 
 atom: SIGNED_INT | SIGNED_FLOAT | "d'" DATE "'"
 atoms: ints | strings | floats 
@@ -116,6 +117,12 @@ class _visitor(Transformer):
             "arg2": children[2],
         }
 
+    def exp_not(self, children):
+        return {
+            "op": "!",
+            "arg1": children[0],
+        }
+
     def start(self, children):
         return children[0]
 
@@ -127,6 +134,8 @@ def _eval_exp(obj, exp) -> bool:
         return _eval_exp(obj, exp["arg1"]) or _eval_exp(obj, exp["arg2"])
     elif op == "+":
         return _eval_exp(obj, exp["arg1"]) and _eval_exp(obj, exp["arg2"])
+    elif op == "!":
+        return not _eval_exp(obj, exp["arg1"])
 
     return _eval_cmp(obj, exp)
 

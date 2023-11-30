@@ -123,7 +123,10 @@ class TestQF(unittest.TestCase):
     def test_match_object(self):
         obj1 = {"k0": [1, 2, 3], "k1": "1", "k2": 2, "k3": 2.3, "k4": "2023-12-31"}
         obj2 = {"key1": "abcdefg"}
-        obj3 = {"da_date": "2023-11-26T11:28:17.791000-05:00", "not_date": "something_else"}
+        obj3 = {
+            "da_date": "2023-11-26T11:28:17.791000-05:00",
+            "not_date": "something_else",
+        }
 
         tests = [
             (
@@ -149,6 +152,9 @@ class TestQF(unittest.TestCase):
             (obj3, "da_date > d'2023-11-25'", True),
             (obj3, "not_a_key > d'2023-11-25'", False),
             (obj3, "not_date > d'2023-11-25'", False),
+            ({"a": 3}, "!a=3", False),
+            ({"a": 3}, "!a=3.", True),
+            ({"a": 3}, "!(a=3+a in [3,4])", False),
         ]
 
         for obj, q, should_match in tests:
