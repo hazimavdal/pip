@@ -140,19 +140,7 @@ def _eval_exp(obj, exp) -> bool:
     return _eval_cmp(obj, exp)
 
 
-def _eval_cmp(obj, exp) -> bool:
-    op = exp["op"]
-    expected_value = exp.get("value")
-    expected_type = type(expected_value)
-
-    selector = exp.get("selector")
-    for key in selector[:-1]:
-        if key not in obj or type(obj[key]) is not dict:
-            return False
-        obj = obj.get(key)
-
-    field = selector[-1]
-
+def compare(obj, key, op, expected_value):
     cmp_ops = {
         "=": operator.eq,
         "~": lambda a, b: a.lower() == b.lower(),
@@ -167,6 +155,36 @@ def _eval_cmp(obj, exp) -> bool:
         "<=": operator.le,
     }
 
+    expected_type = type(expected_value)
+    actual_value = obj.get(key)
+
+    if actual_value is None:
+        return False
+
+    if expected_type is datetime:
+        try:
+            actual_value = datetime.strptime(actual_value[:10], "%Y-%m-%d")
+        except:
+            return False
+    elif type(actual_value) is not expected_type:
+        return False
+
+    # order is important because of "in"
+    return cmp_ops[op](actual_value, expected_value)
+
+
+def _eval_cmp(obj, exp) -> bool:
+    op = exp["op"]
+    expected_value = exp.get("value")
+
+    selector = exp.get("selector")
+    for key in selector[:-1]:
+        if key not in obj or type(obj[key]) is not dict:
+            return False
+        obj = obj.get(key)
+
+    field = selector[-1]
+
     if op == "is":
         return obj.get(field, None) is None
     elif op == "is_not":
@@ -175,24 +193,8 @@ def _eval_cmp(obj, exp) -> bool:
         return field in obj and obj[field] in expected_value
     elif op == "not_in":
         return field not in obj or obj[field] not in expected_value
-    elif op in cmp_ops:
-        actual_value = obj.get(field)
 
-        if actual_value is None:
-            return False
-
-        if expected_type is datetime:
-            try:
-                actual_value = datetime.strptime(actual_value[:10], "%Y-%m-%d")
-            except:
-                return False
-        elif type(actual_value) is not expected_type:
-            return False
-
-        # order is important because of "in"
-        return cmp_ops[op](actual_value, expected_value)
-    else:
-        raise Exception(f"{op}: unknown operation")
+    return compare(obj, field, op, expected_value)
 
 
 class Filter:
