@@ -18,7 +18,7 @@ exp: selector ATOMIC_OP atom                 -> exp_compare
    | exp BIN_OP exp                          -> exp_binop
    | "!" exp                                 -> exp_not
 
-atom: SIGNED_INT | SIGNED_FLOAT | "d'" DATE "'"
+atom: SIGNED_INT | SIGNED_FLOAT | DATE
 atoms: ints | strings | floats 
 ints: SIGNED_INT                            -> list_head
     | SIGNED_INT "," ints                   -> list_cons
@@ -173,10 +173,11 @@ def compare(obj, key, op, expected_value):
         return False
 
     if expected_type is datetime:
-        try:
-            actual_value = datetime.strptime(actual_value[:10], "%Y-%m-%d")
-        except:
-            return False
+        if type(actual_value) is not datetime:
+            try:
+                actual_value = datetime.strptime(actual_value[:10], "%Y-%m-%d")
+            except:
+                return False
     elif type(actual_value) is not expected_type:
         return False
 

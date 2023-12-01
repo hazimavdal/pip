@@ -131,7 +131,7 @@ class TestQF(unittest.TestCase):
         tests = [
             (
                 obj1,
-                "k1 = '1' & k2 = 2 & k3 = 2.3 & k4 > d'2023-11-30' & k4 < d'2024-01-01' & k1 in ['1', '2'] & k3 > 1.0 & k5 is null & k4 is_not null",
+                "k1 = '1' & k2 = 2 & k3 = 2.3 & k4 > 2023-11-30 & k4 < 2024-01-01 & k1 in ['1', '2'] & k3 > 1.0 & k5 is null & k4 is_not null",
                 True,
             ),
             (obj1, "key1 not_in ['a']", True),
@@ -149,9 +149,9 @@ class TestQF(unittest.TestCase):
             (obj2, "key1 = 'abcdefg'", True),
             (obj2, "key1 ~ 'abcdefg '", False),
             (obj2, "key1 !~ 'abcdefg '", True),
-            (obj3, "da_date > d'2023-11-25'", True),
-            (obj3, "not_a_key > d'2023-11-25'", False),
-            (obj3, "not_date > d'2023-11-25'", False),
+            (obj3, "da_date > 2023-11-25", True),
+            (obj3, "not_a_key > 2023-11-25", False),
+            (obj3, "not_date > 2023-11-25", False),
             ({"a": 3}, "!a=3", False),
             ({"a": 3}, "!a=3.", True),
             ({"a": 3}, "!(a=3&a in [3,4])", False),
@@ -160,7 +160,7 @@ class TestQF(unittest.TestCase):
             ({"a": 3}, "* in [1, 3]", True),
             ({"a": 3}, "* is_not null", True),
             ({"a": 3}, "* is null", False),
-            ({"a": {"b": {"c": '1'}}}, "a.b.* = '1'", True),
+            ({"a": {"b": {"c": "1"}}}, "a.b.* = '1'", True),
         ]
 
         for obj, q, should_match in tests:
