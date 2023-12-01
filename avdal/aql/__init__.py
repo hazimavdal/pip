@@ -37,7 +37,7 @@ ATOMIC_OP: "=" | "!=" | "<" | ">" | "<=" | ">="
 STRING_OP: "=" | "!=" | "~" | "!~" | "~" | "*=" | "=*" | "%"   
 LIST_OP: "in" | "not_in"                    
 NULL_OP: "is" | "is_not"                                 
-STRING: /'[^']*'/ 
+STRING: /'[^']*'|"[^"]*"/ 
 NON_EMPTY_STRING: /'[^']+'/                                   
 ANY_KEY: "*"
 DATE.1: /\d{4}-\d{2}-\d{2}/

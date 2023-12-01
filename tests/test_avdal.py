@@ -161,6 +161,12 @@ class TestQF(unittest.TestCase):
             ({"a": 3}, "* is_not null", True),
             ({"a": 3}, "* is null", False),
             ({"a": {"b": {"c": "1"}}}, "a.b.* = '1'", True),
+            ({"a": "abcd"}, 'a = "abcd"', True),
+            ({"a": "abcd"}, 'a *= "abcd"', True),
+            ({"a": "abcd"}, 'a =* "abcd"', True),
+            ({"a": "abcd"}, 'a % "a.cd"', True),
+            ({"a": "abcd"}, 'a % ".*"', True),
+            ({"a": "abcd"}, 'a ~ "AbCD"', True),
         ]
 
         for obj, q, should_match in tests:
