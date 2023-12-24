@@ -171,6 +171,7 @@ class TestQF(unittest.TestCase):
             ({"a": "abcd"}, "len(a) = 3", False),
             ({"a": 3}, "len(a) = 3", False),
             ({"a": [1, 2, 4, 5]}, "len(a) = 4", True),
+            ({"a": {"b.c.d": [1, 2, 4, 5]}}, "len(a.'b.c.d') = 4", True),
         ]
 
         for obj, q, should_match in tests:
