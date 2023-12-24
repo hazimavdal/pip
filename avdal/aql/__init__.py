@@ -12,12 +12,14 @@ start: exp
 
 exp: selector ATOMIC_OP atom                 -> exp_compare
    | selector STRING_OP STRING               -> exp_compare
+   | len ATOMIC_OP NUMBER                    -> len_compare
    | selector LIST_OP "[" atoms "]"          -> exp_compare
    | selector NULL_OP "null"                 -> exp_compare
    | "(" exp ")"                             -> exp_group 
    | exp BIN_OP exp                          -> exp_binop
    | "!" exp                                 -> exp_not
 
+len: "len" "(" selector ")"
 atom: SIGNED_INT | SIGNED_FLOAT | DATE
 atoms: ints | strings | floats 
 ints: SIGNED_INT                            -> list_head
@@ -42,6 +44,7 @@ NON_EMPTY_STRING: /'[^']+'/
 ANY_KEY: "*"
 DATE.1: /\d{4}-\d{2}-\d{2}/
 
+%import common.NUMBER
 %import common.SIGNED_INT
 %import common.SIGNED_FLOAT
 %import common.WS
@@ -59,7 +62,7 @@ class _visitor(Transformer):
             return token.value
 
         def get_typed_val(token):
-            if token.type == "SIGNED_INT":
+            if token.type in ["NUMBER", "SIGNED_INT"]:
                 return int(token.value)
             if token.type == "SIGNED_FLOAT":
                 return float(token.value)
@@ -70,6 +73,7 @@ class _visitor(Transformer):
 
             raise Exception(f"{token.type}: unknown token type")
 
+        self.NUMBER = get_typed_val
         self.SIGNED_INT = get_typed_val
         self.SIGNED_FLOAT = get_typed_val
         self.STRING = get_typed_val
@@ -111,9 +115,25 @@ class _visitor(Transformer):
     def atoms(self, children):
         return children[0]
 
+    def len(self, children):
+        return children[0]
+
+    def len_compare(self, children):
+        return {
+            "selector": {
+                "key": children[0],
+                "type": "len",
+            },
+            "op": children[1],
+            "value": None if len(children) < 3 else children[2],
+        }
+
     def exp_compare(self, children):
         return {
-            "selector": children[0],
+            "selector": {
+                "key": children[0],
+                "type": "plain",
+            },
             "op": children[1],
             "value": None if len(children) < 3 else children[2],
         }
@@ -151,7 +171,7 @@ def _eval_exp(obj, exp) -> bool:
     return _eval_cmp(obj, exp)
 
 
-def compare(obj, key, op, expected_value):
+def compare(obj, stype, key, op, expected_value):
     cmp_ops = {
         "=": operator.eq,
         "~": lambda a, b: a.lower() == b.lower(),
@@ -172,6 +192,11 @@ def compare(obj, key, op, expected_value):
     if actual_value is None:
         return False
 
+    if stype == "len":
+        if not hasattr(actual_value, "__len__"):
+            return False
+        actual_value = len(actual_value)
+
     if expected_type is datetime:
         if type(actual_value) is not datetime:
             try:
@@ -189,41 +214,43 @@ def _eval_cmp(obj, exp) -> bool:
     expected_value = exp.get("value")
 
     selector = exp.get("selector")
-    for key in selector[:-1]:
+    stype = selector["type"]
+    skey = selector["key"]
+    for key in skey[:-1]:
         if key not in obj or type(obj[key]) is not dict:
             return False
-        selector = selector[1:]
+        skey = skey[1:]
         obj = obj.get(key)
 
-    field = selector[-1]
+    field = skey[-1]
 
     if op == "is":
-        if selector == ["*"]:
+        if skey == ["*"]:
             return None in obj.values()
         return obj.get(field, None) is None
     elif op == "is_not":
-        if selector == ["*"]:
+        if skey == ["*"]:
             return None not in obj.values()
 
         return obj.get(field, None) is not None
     elif op == "in":
-        if selector == ["*"]:
+        if skey == ["*"]:
             return bool(set(expected_value).intersection(set(obj.values())))
 
         return field in obj and obj[field] in expected_value
     elif op == "not_in":
-        if selector == ["*"]:
+        if skey == ["*"]:
             return not bool(set(expected_value).intersection(set(obj.values())))
 
         return field not in obj or obj[field] not in expected_value
 
-    if selector == ["*"]:
+    if skey == ["*"]:
         for key in obj.keys():
-            if compare(obj, key, op, expected_value):
+            if compare(obj, stype, key, op, expected_value):
                 return True
         return False
 
-    return compare(obj, field, op, expected_value)
+    return compare(obj, stype, field, op, expected_value)
 
 
 class Filter:

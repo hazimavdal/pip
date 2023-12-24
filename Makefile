@@ -1,4 +1,7 @@
-.PHONY: build upload clean
+.PHONY: build upload clean local
+
+local: 
+	@pip3 install .
 
 build:
 	@python3 -m build
@@ -6,7 +9,7 @@ build:
 upload:
 	@python3 -m twine upload --skip-existing --repository pypi dist/*
 
-release: build upload
+release: local build upload
 
 test:
 	@python3 -m unittest
