@@ -18,7 +18,7 @@ def run(cmd, *args, cwd=None, check=False):
         return 1, str(err), ""
 
     if check and exec.returncode != 0:
-        raise Exception(f"Command returned {exec.returncode}")
+        raise Exception(f"Command failed: ret={exec.returncode} cmd=[{cmd} {' '.join(args)}] stdout=[{exec.stdout}] stderr=[{exec.stderr}]")
 
     return exec.returncode, exec.stdout, exec.stderr
 
