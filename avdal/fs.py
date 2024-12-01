@@ -96,7 +96,8 @@ def _transform_exif_date(entry: os.DirEntry, field_id: int):
         parent, _ = os.path.split(entry)
         _, ext = os.path.splitext(entry)
         field = Image.open(entry.path)._getexif()[field_id]
-        sig = datetime.strptime(field, "%Y:%m:%d %H:%M:%S").strftime("%Y%m%d%H%M%S")
+        sig = datetime.strptime(
+            field, "%Y:%m:%d %H:%M:%S").strftime("%Y%m%d%H%M%S")
         return os.path.join(parent, sig + ext)
     except Exception as _:
         return entry.path
@@ -129,7 +130,11 @@ def readj(path: str):
     if path == "-":
         return json.load(sys.stdin)
     elif path.startswith("http://") or path.startswith("https://"):
-        return requests.get(path).json()
+        resp = requests.get(path)
+        if not resp.ok:
+            raise f"GET {path}: request failed with status={
+                resp.status_code} body={resp.text}"
+        return resp.json()
     else:
         with open(path, "r") as f:
             return json.load(f)
